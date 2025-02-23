@@ -1,5 +1,10 @@
 'use client';
 
+import { useContext, useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { AptosClient, Types } from 'aptos';
+import { AptosWalletContext } from './layout/providers';
+import { CONTRACT_ADDRESS } from '@/lib/aptos';
 import {
   Card,
   CardContent,
@@ -7,11 +12,9 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useReadContract, useWriteContract } from 'wagmi';
-import WNW_ABI from '@/abi/IWNW.abi';
-import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+
+const client = new AptosClient('https://testnet.aptoslabs.com');
 
 const fetchTokenPrice = async (tokenAddress: string): Promise<number | null> => {
   try {
@@ -23,8 +26,6 @@ const fetchTokenPrice = async (tokenAddress: string): Promise<number | null> => 
     }
 
     const data = await response.json();
-    console.log('API Response:', data);
-
     const priceInUsd = data[tokenAddress.toLowerCase()]?.usd;
 
     if (!priceInUsd) {
@@ -39,7 +40,6 @@ const fetchTokenPrice = async (tokenAddress: string): Promise<number | null> => 
 };
 
 export function GameDetailVote() {
-  const WNW_PRECOMPILE_ADDRESS = '0xe31bA092390628Aaf5faFda2F50bFD7d51C9e657';
   const params = useParams();
   const { id } = params as { id: string };
   const [betAmount, setBetAmount] = useState('');
@@ -47,65 +47,73 @@ export function GameDetailVote() {
   const [gamePhase, setGamePhase] = useState<'preview' | 'betting' | 'debate' | 'ended'>('preview');
   const [startPrice, setStartPrice] = useState<number | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-
-  const { data: game }: any = useReadContract({
-    address: WNW_PRECOMPILE_ADDRESS,
-    abi: WNW_ABI,
-    functionName: 'getGame',
-    args: [id]
-  });
-
-  const { writeContract } = useWriteContract();
-
-  const handleBet = async () => {
-    if (!selectedAgent || !betAmount) return;
-
-    const amount = BigInt(Math.floor(Number(betAmount) * 10 ** 18));
-    writeContract({
-      address: WNW_PRECOMPILE_ADDRESS,
-      abi: WNW_ABI,
-      functionName: 'bet',
-      args: [game.gameId, selectedAgent === 'A', amount]
-    });
-  };
+  const [debate, setDebate] = useState<any>(null);
+  const { account, connect, isConnected } = useContext(AptosWalletContext);
 
   useEffect(() => {
-    if (game) {
-      console.log('Game data:', game);
-      const fetchPrices = async () => {
-        const startPrice = await fetchTokenPrice('0x55d398326f99059ff775485246999027b3197955');
-        const currentPrice = await fetchTokenPrice('0x55d398326f99059ff775485246999027b3197955');
+    const fetchDebate = async () => {
+      try {
+        const resource = await client.getAccountResource(
+          CONTRACT_ADDRESS,
+          "debate::ai_debate::DebateStore"
+        );
+        
+        const debateStore = resource.data as any;
+        const currentDebate = debateStore.debates[Number(id) - 1];
+        setDebate(currentDebate);
 
-        setStartPrice(startPrice);
-        setCurrentPrice(currentPrice);
+        // 토큰 가격 조회
+        const price = await fetchTokenPrice('0x55d398326f99059ff775485246999027b3197955');
+        setStartPrice(price);
+        setCurrentPrice(price);
+      } catch (error) {
+        console.error('Error fetching debate:', error);
+      }
+    };
+
+    if (id) {
+      fetchDebate();
+    }
+  }, [id]);
+
+  const handleBet = async () => {
+    if (!selectedAgent || !betAmount || !isConnected) {
+      if (!isConnected) {
+        await connect();
+        return;
+      }
+      return;
+    }
+
+    try {
+      const transaction = {
+        type: "entry_function_payload",
+        function: `${CONTRACT_ADDRESS}::ai_debate::place_bet`,
+        type_arguments: [],
+        arguments: [
+          debate.id,
+          (Number(betAmount) * 100000000).toString(), // Convert to Octas (10^8)
+          selectedAgent === 'A' ? '1' : '2' // AI_A = 1, AI_B = 2
+        ]
       };
 
-      fetchPrices();
-    }
-  }, [game]);
-
-  if (!game) {
-    console.log("undefined");
-    return <></>;
-  }
-
-  const upAmount = game.upAmount ? BigInt(game.upAmount) : BigInt(0);
-  const downAmount = game.downAmount ? BigInt(game.downAmount) : BigInt(0);
-  const totalPoolAmount = upAmount + downAmount;
-
-  const chartData = [{ up: Number(upAmount) / 10 ** 18, down: Number(downAmount) / 10 ** 18 }];
-
-  const totalVisitors = chartData[0].up + chartData[0].down;
-  const chartConfig = {
-    up: {
-      label: 'Up',
-      color: 'hsl(var(--chart-5))'
-    },
-    down: {
-      label: 'Down',
-      color: 'hsl(var(--chart-2))'
+      if (window.aptos) {
+        const pendingTx = await window.aptos.signAndSubmitTransaction(transaction);
+        console.log('Pending tx:', pendingTx);
+        // 여기에 트랜잭션 성공 처리 로직 추가
+      }
+    } catch (error) {
+      console.error('Error placing bet:', error);
     }
   };
+
+  if (!debate) {
+    return <div>Loading debate...</div>;
+  }
+
+  const upAmount = debate.ai_a_pool || 0;
+  const downAmount = debate.ai_b_pool || 0;
+  const totalPoolAmount = upAmount + downAmount;
 
   return (
     <Card className="w-full bg-white text-black">
@@ -120,19 +128,19 @@ export function GameDetailVote() {
               onClick={() => setSelectedAgent('A')}
               className={`h-20 ${selectedAgent === 'A' ? 'bg-[#00A29A]' : ''}`}
             >
-              Agent A
+              {debate.ai_a}
             </Button>
             <Button
               variant={selectedAgent === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedAgent('B')}
               className={`h-20 ${selectedAgent === 'B' ? 'bg-[#C73535]' : ''}`}
             >
-              Agent B
+              {debate.ai_b}
             </Button>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">베팅 금액 (MOVE)</label>
+            <label className="text-sm font-medium">베팅 금액 (APT)</label>
             <div className="flex items-center space-x-2">
               <Input
                 type="number"
@@ -141,27 +149,27 @@ export function GameDetailVote() {
                 placeholder="0.0"
                 className="text-right"
               />
-              <span>MOVE</span>
+              <span>APT</span>
             </div>
           </div>
 
           <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
             <div className="flex justify-between">
-              <span>Agent A 총 베팅</span>
-              <span>{game?.upAmount ? Number(game.upAmount) / 10 ** 18 : 0} MOVE</span>
+              <span>{debate.ai_a} 총 베팅</span>
+              <span>{Number(upAmount) / 100000000} APT</span>
             </div>
             <div className="flex justify-between">
-              <span>Agent B 총 베팅</span>
-              <span>{game?.downAmount ? Number(game.downAmount) / 10 ** 18 : 0} MOVE</span>
+              <span>{debate.ai_b} 총 베팅</span>
+              <span>{Number(downAmount) / 100000000} APT</span>
             </div>
           </div>
 
           <Button
             onClick={handleBet}
-            disabled={!selectedAgent || !betAmount || gamePhase !== 'betting'}
+            disabled={!selectedAgent || !betAmount || !isConnected || debate.is_finished}
             className="w-full"
           >
-            베팅하기
+            {isConnected ? '베팅하기' : '지갑 연결'}
           </Button>
         </div>
       </CardContent>

@@ -1,39 +1,52 @@
 'use client';
 
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_GAME_COMMENTS, CREATE_COMMENT } from '@/src/data/query';
+import { GameComment } from '@/src/mock/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
-
-interface Comment {
-  id: string;
-  address: string;
-  message: string;
-  timestamp: number;
-  isAgentA: boolean;
-}
+import { useParams } from 'next/navigation';
 
 export const GameDetailComment = () => {
-  const { address } = useAccount();
+  const params = useParams();
+  const { id: gameId } = params as { id: string };
   const [message, setMessage] = useState('');
-  const [comments, setComments] = useState<Comment[]>([]);
   const [selectedSide, setSelectedSide] = useState<'A' | 'B' | null>(null);
 
-  const handleSubmit = () => {
-    if (!message || !selectedSide || !address) return;
+  const { loading, error, data } = useQuery(GET_GAME_COMMENTS, {
+    variables: { gameId },
+  });
 
-    const newComment: Comment = {
-      id: Math.random().toString(),
-      address: address,
-      message,
-      timestamp: Date.now(),
-      isAgentA: selectedSide === 'A'
-    };
+  const [createComment] = useMutation(CREATE_COMMENT, {
+    refetchQueries: [{ query: GET_GAME_COMMENTS, variables: { gameId } }],
+  });
 
-    setComments(prev => [...prev, newComment]);
-    setMessage('');
+  const handleSubmit = async () => {
+    if (!message || !selectedSide) return;
+
+    try {
+      await createComment({
+        variables: {
+          input: {
+            gameId,
+            message,
+            isAgentA: selectedSide === 'A'
+          }
+        }
+      });
+      setMessage('');
+      setSelectedSide(null);
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    }
   };
+
+  if (loading) return <div>Loading comments...</div>;
+  if (error) return <div>Error loading comments: {error.message}</div>;
+
+  const comments = data?.getGameComments ?? [] as GameComment[];
 
   return (
     <div className="space-y-6">
@@ -65,8 +78,8 @@ export const GameDetailComment = () => {
         <div className="space-y-4">
           <h3 className="font-bold text-[#00A29A]">Agent A 지지자</h3>
           {comments
-            .filter(c => c.isAgentA)
-            .map(comment => (
+            .filter((comment: GameComment) => comment.isAgentA)
+            .map((comment: GameComment) => (
               <div key={comment.id} className="flex items-start space-x-2 p-2 bg-gray-50 rounded">
                 <Avatar>
                   <AvatarImage src={`https://avatars.dicebear.com/api/identicon/${comment.address}.svg`} />
@@ -83,8 +96,8 @@ export const GameDetailComment = () => {
         <div className="space-y-4">
           <h3 className="font-bold text-[#C73535]">Agent B 지지자</h3>
           {comments
-            .filter(c => !c.isAgentA)
-            .map(comment => (
+            .filter((comment: GameComment) => !comment.isAgentA)
+            .map((comment: GameComment) => (
               <div key={comment.id} className="flex items-start space-x-2 p-2 bg-gray-50 rounded">
                 <Avatar>
                   <AvatarImage src={`https://avatars.dicebear.com/api/identicon/${comment.address}.svg`} />

@@ -1,5 +1,5 @@
 import { GameList } from '@/components/game-list';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GameListContract } from '@/components/game-list-contract';
 
 export default function page() {
   return (
@@ -14,6 +14,7 @@ export default function page() {
       </h1>
       <div>
         <GameList/>
+        <GameListContract/>
       </div>
     </div>
   );

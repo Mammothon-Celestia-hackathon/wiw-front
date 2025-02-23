@@ -11,11 +11,8 @@ import { UseFormReturn } from 'react-hook-form';
 interface AgentFormFieldsProps {
   form: UseFormReturn<any>;
   type: 'A' | 'B';
-  personalities: string[];
   tags: string[];
-  onAddPersonality: (type: 'A' | 'B', value: string) => void;
   onAddTag: (type: 'A' | 'B', value: string) => void;
-  onRemovePersonality: (type: 'A' | 'B', index: number) => void;
   onRemoveTag: (type: 'A' | 'B', index: number) => void;
   onCharacterChange: (value: string) => void;
 }
@@ -23,11 +20,8 @@ interface AgentFormFieldsProps {
 export function AgentFormFields({
   form,
   type,
-  personalities,
   tags,
-  onAddPersonality,
   onAddTag,
-  onRemovePersonality,
   onRemoveTag,
   onCharacterChange
 }: AgentFormFieldsProps) {
@@ -61,48 +55,13 @@ export function AgentFormFields({
 
       <FormField
         control={form.control}
-        name={`agent${type}.personality`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>성격 특성</FormLabel>
-            <div className="flex gap-2">
-              <FormControl>
-                <Input {...field} className="flex-1" />
-              </FormControl>
-              <Button
-                type="button"
-                onClick={() => onAddPersonality(type, field.value)}
-                size="sm"
-                className="shrink-0 px-8"
-              >
-                추가
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {personalities.map((personality, index) => (
-                <Badge key={index} variant="outline">
-                  {personality}
-                  <X
-                    className="w-3 h-3 ml-1 cursor-pointer"
-                    onClick={() => onRemovePersonality(type, index)}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name={`agent${type}.tag`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>특성 태그</FormLabel>
             <div className="flex gap-2">
               <FormControl>
-                <Input {...field} placeholder="#태그입력" className="flex-1" />
+                <Input {...field} placeholder="태그 입력" className="flex-1" />
               </FormControl>
               <Button
                 type="button"

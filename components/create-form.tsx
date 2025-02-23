@@ -12,37 +12,29 @@ import { Heading } from '@/components/ui/heading';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import WNW_ABI from '@/abi/IWNW.abi';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useToast } from './ui/use-toast';
 import React from 'react';
-import { useWriteContract } from 'wagmi';
 import { AgentFormFields } from './agent-form-fields';
 
 const formSchema = z.object({
-  title: z.string().min(1, "제목을 입력해주세요"),
+  topic: z.string().min(5, "토론 주제는 최소 5자 이상이어야 합니다"),
   agentA: z.object({
-    character: z.string(),
-    personality: z.string(),
-    tag: z.string()
+    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다")
   }),
   agentB: z.object({
-    character: z.string(),
-    personality: z.string(),
-    tag: z.string()
+    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다")
   }),
-  duration: z.number().min(1, "진행 시간을 설정해주세요"),
-  minBet: z.number().min(0, "최소 베팅 금액을 설정해주세요"),
+  duration: z.number().min(1, "토론 시간은 최소 1분 이상이어야 합니다"),
 });
+
+const CONTRACT_ADDRESS = "0x18693562f4ced0fd77d6b42416003a5945d15358431fbff2b9af0e4b0759d261";
 
 export const CreateForm = () => {
   const { toast } = useToast();
-  const { writeContract } = useWriteContract();
   const [loading, setLoading] = useState(false);
-  const [agentAPersonalities, setAgentAPersonalities] = useState<string[]>([]);
-  const [agentBPersonalities, setAgentBPersonalities] = useState<string[]>([]);
   const [agentATags, setAgentATags] = useState<string[]>([]);
   const [agentBTags, setAgentBTags] = useState<string[]>([]);
   const [agentACharacter, setAgentACharacter] = useState('');
@@ -51,78 +43,55 @@ export const CreateForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      agentA: { character: '', personality: '', tag: '' },
-      agentB: { character: '', personality: '', tag: '' },
+      topic: "",
+      agentA: { character: "" },
+      agentB: { character: "" },
       duration: 5,
-      minBet: 0.1
-    }
+    },
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      await writeContract({
-        address: '0xe31bA092390628Aaf5faFda2F50bFD7d51C9e657',
-        abi: WNW_ABI,
-        functionName: 'createGame',
-        args: [
-          data.duration * 60,
-          BigInt(Math.floor(data.minBet * 10 ** 18)),
-          data.title,
-          JSON.stringify({
-            description: '',
-            agents: {
-              A: { ...data.agentA, personalities: agentAPersonalities, tags: agentATags },
-              B: { ...data.agentB, personalities: agentBPersonalities, tags: agentBTags }
-            }
-          })
-        ]
+      
+      if (!window.aptos) {
+        toast({ variant: 'destructive', title: "Aptos 지갑을 설치해주세요" });
+        return;
+      }
+
+      const { address } = await window.aptos.connect();
+      
+      
+      console.log('Original values:', {
+        topic: values.topic,
+        aiA: values.agentA.character,
+        aiB: values.agentB.character
       });
-      toast({ title: "게임 생성 성공" });
+
+      const transaction = {
+        payload: {
+          type: "entry_function_payload",
+          function: `${CONTRACT_ADDRESS}::ai_debate::create_debate`,
+          type_arguments: [],
+          arguments: [
+            values.topic,
+            values.agentA.character,
+            values.agentB.character,
+            values.duration * 60,
+          ],
+        }
+      };
+
+      console.log('Final Transaction:', transaction);
+
+      const response = await window.aptos.signAndSubmitTransaction(transaction);
+      console.log('Transaction Response:', response);
+      toast({ title: "디베이트 생성 성공" });
     } catch (error) {
-      toast({ variant: 'destructive', title: "게임 생성 실패" });
+      console.error('Error details:', error);
+      toast({ variant: 'destructive', title: "디베이트 생성 실패" });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const addPersonality = (agent: 'A' | 'B', personality: string) => {
-    if (!personality) return;
-    if (agent === 'A') {
-      setAgentAPersonalities([...agentAPersonalities, personality]);
-      form.setValue('agentA.personality', '');
-    } else {
-      setAgentBPersonalities([...agentBPersonalities, personality]);
-      form.setValue('agentB.personality', '');
-    }
-  };
-
-  const addTag = (agent: 'A' | 'B', tag: string) => {
-    if (!tag) return;
-    if (!tag.startsWith('#')) tag = '#' + tag;
-    if (agent === 'A') {
-      setAgentATags([...agentATags, tag]);
-      form.setValue('agentA.tag', '');
-    } else {
-      setAgentBTags([...agentBTags, tag]);
-      form.setValue('agentB.tag', '');
-    }
-  };
-
-  const removePersonality = (agent: 'A' | 'B', index: number) => {
-    if (agent === 'A') {
-      setAgentAPersonalities(agentAPersonalities.filter((_, i) => i !== index));
-    } else {
-      setAgentBPersonalities(agentBPersonalities.filter((_, i) => i !== index));
-    }
-  };
-
-  const removeTag = (agent: 'A' | 'B', index: number) => {
-    if (agent === 'A') {
-      setAgentATags(agentATags.filter((_, i) => i !== index));
-    } else {
-      setAgentBTags(agentBTags.filter((_, i) => i !== index));
     }
   };
 
@@ -136,12 +105,12 @@ export const CreateForm = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
-            name="title"
+            name="topic"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>토론 주제</FormLabel>
                 <FormControl>
-                  <Input disabled={loading} placeholder="예: 비트코인이 이번 주에 5만불을 돌파할 것인가?" {...field} />
+                  <Input disabled={loading} placeholder="토론할 주제를 입력하세요" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -152,60 +121,52 @@ export const CreateForm = () => {
             <AgentFormFields
               form={form}
               type="A"
-              personalities={agentAPersonalities}
               tags={agentATags}
-              onAddPersonality={addPersonality}
-              onAddTag={addTag}
-              onRemovePersonality={removePersonality}
-              onRemoveTag={removeTag}
+              onAddTag={(type, value) => {
+                if (value) {
+                  if (!value.startsWith('#')) value = '#' + value;
+                  setAgentATags([...agentATags, value]);
+                }
+              }}
+              onRemoveTag={(type, index) => {
+                setAgentATags(agentATags.filter((_, i) => i !== index));
+              }}
               onCharacterChange={(value) => setAgentACharacter(value)}
             />
 
             <AgentFormFields
               form={form}
               type="B"
-              personalities={agentBPersonalities}
               tags={agentBTags}
-              onAddPersonality={addPersonality}
-              onAddTag={addTag}
-              onRemovePersonality={removePersonality}
-              onRemoveTag={removeTag}
+              onAddTag={(type, value) => {
+                if (value) {
+                  if (!value.startsWith('#')) value = '#' + value;
+                  setAgentBTags([...agentBTags, value]);
+                }
+              }}
+              onRemoveTag={(type, index) => {
+                setAgentBTags(agentBTags.filter((_, i) => i !== index));
+              }}
               onCharacterChange={(value) => setAgentBCharacter(value)}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="duration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>진행 시간 (분)</FormLabel>
-                  <FormControl>
-                    <Input type="number" disabled={loading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="minBet"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>최소 베팅 금액 (MOVE)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.1" disabled={loading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>토론 시간 (분)</FormLabel>
+                <FormControl>
+                  <Input type="number" disabled={loading} {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <Button disabled={loading} className="w-full" type="submit">
-            게임 생성하기
+            디베이트 생성하기
           </Button>
         </form>
       </Form>
