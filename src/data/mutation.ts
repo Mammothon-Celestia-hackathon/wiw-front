@@ -1,4 +1,4 @@
-import { gql } from "@/__generated__/gql";
+import { gql } from "@/src/__generated__/gql";
 
 gql(/* GraphQL */ `
   mutation createUser($address: String!) {

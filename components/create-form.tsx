@@ -20,12 +20,17 @@ import React from 'react';
 import { AgentFormFields } from './agent-form-fields';
 
 const formSchema = z.object({
+  name: z.string().min(3, "게임 이름은 최소 3자 이상이어야 합니다"),
   topic: z.string().min(5, "토론 주제는 최소 5자 이상이어야 합니다"),
   agentA: z.object({
-    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다")
+    name: z.string().min(2, "AI 이름은 최소 2자 이상이어야 합니다"),
+    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
+    address: z.string().min(1, "주소를 입력해주세요")
   }),
   agentB: z.object({
-    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다")
+    name: z.string().min(2, "AI 이름은 최소 2자 이상이어야 합니다"),
+    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
+    address: z.string().min(1, "주소를 입력해주세요")
   }),
   duration: z.number().min(1, "토론 시간은 최소 1분 이상이어야 합니다"),
 });
@@ -43,9 +48,10 @@ export const CreateForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       topic: "",
-      agentA: { character: "" },
-      agentB: { character: "" },
+      agentA: { name: "", character: "", address: "" },
+      agentB: { name: "", character: "", address: "" },
       duration: 5,
     },
   });
@@ -61,28 +67,24 @@ export const CreateForm = () => {
 
       const { address } = await window.aptos.connect();
       
-      
-      console.log('Original values:', {
-        topic: values.topic,
-        aiA: values.agentA.character,
-        aiB: values.agentB.character
-      });
-
       const transaction = {
         payload: {
           type: "entry_function_payload",
-          function: `${CONTRACT_ADDRESS}::ai_debate::create_debate`,
+          function: `${CONTRACT_ADDRESS}::ai_debate_v2::create_debate`,
           type_arguments: [],
           arguments: [
+            values.name,
             values.topic,
+            values.agentA.name,
             values.agentA.character,
+            values.agentA.address,
+            values.agentB.name,
             values.agentB.character,
+            values.agentB.address,
             values.duration * 60,
           ],
         }
       };
-
-      console.log('Final Transaction:', transaction);
 
       const response = await window.aptos.signAndSubmitTransaction(transaction);
       console.log('Transaction Response:', response);
@@ -103,6 +105,20 @@ export const CreateForm = () => {
       <Separator />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>게임 이름</FormLabel>
+                <FormControl>
+                  <Input disabled={loading} placeholder="게임 이름을 입력하세요" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="topic"
@@ -132,6 +148,7 @@ export const CreateForm = () => {
                 setAgentATags(agentATags.filter((_, i) => i !== index));
               }}
               onCharacterChange={(value) => setAgentACharacter(value)}
+              requireAddress={true}
             />
 
             <AgentFormFields
@@ -148,6 +165,7 @@ export const CreateForm = () => {
                 setAgentBTags(agentBTags.filter((_, i) => i !== index));
               }}
               onCharacterChange={(value) => setAgentBCharacter(value)}
+              requireAddress={true}
             />
           </div>
 

@@ -8,13 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 
-interface AgentFormFieldsProps {
+export interface AgentFormFieldsProps {
   form: UseFormReturn<any>;
   type: 'A' | 'B';
   tags: string[];
   onAddTag: (type: 'A' | 'B', value: string) => void;
   onRemoveTag: (type: 'A' | 'B', index: number) => void;
   onCharacterChange: (value: string) => void;
+  requireAddress?: boolean;
 }
 
 export function AgentFormFields({
@@ -23,7 +24,8 @@ export function AgentFormFields({
   tags,
   onAddTag,
   onRemoveTag,
-  onCharacterChange
+  onCharacterChange,
+  requireAddress
 }: AgentFormFieldsProps) {
   const colorClass = type === 'A' ? 'text-primary' : 'text-destructive';
 
@@ -35,12 +37,27 @@ export function AgentFormFields({
 
       <FormField
         control={form.control}
+        name={`agent${type}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>AI {type} 이름</FormLabel>
+            <FormControl>
+              <Input placeholder={`AI ${type}의 이름을 입력하세요`} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name={`agent${type}.character`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>캐릭터 설명</FormLabel>
+            <FormLabel>AI {type} 캐릭터 설정</FormLabel>
             <FormControl>
-              <Textarea
+              <Input 
+                placeholder={`AI ${type}의 캐릭터를 설정하세요`} 
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);
@@ -52,6 +69,22 @@ export function AgentFormFields({
           </FormItem>
         )}
       />
+
+      {requireAddress && (
+        <FormField
+          control={form.control}
+          name={`agent${type}.address`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>AI {type} 주소</FormLabel>
+              <FormControl>
+                <Input placeholder={`AI ${type}의 주소를 입력하세요`} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
