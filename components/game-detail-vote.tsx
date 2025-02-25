@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Chat from './chat';
 
 const client = new AptosClient('https://testnet.aptoslabs.com');
 
@@ -108,7 +109,8 @@ export function GameDetailVote() {
   };
 
   if (!debate) {
-    return <div>Loading debate...</div>;
+    return     <Chat/>
+    ;
   }
 
   const upAmount = debate.ai_a_pool || 0;

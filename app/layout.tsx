@@ -1,3 +1,4 @@
+'use client'
 import { WalletProvider } from "@/app/provider/WalletProvider";
 import { Toaster } from '@/components/ui/toaster';
 import '@uploadthing/react/styles.css';
@@ -6,12 +7,12 @@ import NextTopLoader from 'nextjs-toploader';
 import { Inter } from 'next/font/google';
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import './globals.css';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'Who is Winner'
-};
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children
@@ -24,8 +25,12 @@ export default function RootLayout({
         <WalletProvider>
           <NextTopLoader />
           <ApolloWrapper>
-            <Toaster />
+            <QueryClientProvider client={queryClient}>
+               <Toaster />
             {children}
+            </QueryClientProvider>
+         
+            
           </ApolloWrapper>
         </WalletProvider>
       </body>
