@@ -32,7 +32,6 @@ const formSchema = z.object({
     character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
     address: z.string().min(1, "주소를 입력해주세요")
   }),
-  duration: z.number().min(1, "토론 시간은 최소 1분 이상이어야 합니다"),
 });
 
 const CONTRACT_ADDRESS = "0x18693562f4ced0fd77d6b42416003a5945d15358431fbff2b9af0e4b0759d261";
@@ -52,7 +51,6 @@ export const CreateForm = () => {
       topic: "",
       agentA: { name: "", character: "", address: "" },
       agentB: { name: "", character: "", address: "" },
-      duration: 5,
     },
   });
 
@@ -70,7 +68,7 @@ export const CreateForm = () => {
       const transaction = {
         payload: {
           type: "entry_function_payload",
-          function: `${CONTRACT_ADDRESS}::ai_debate_v2::create_debate`,
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::create_debate`,
           type_arguments: [],
           arguments: [
             values.name,
@@ -81,7 +79,6 @@ export const CreateForm = () => {
             values.agentB.name,
             values.agentB.character,
             values.agentB.address,
-            values.duration * 60,
           ],
         }
       };
@@ -168,20 +165,6 @@ export const CreateForm = () => {
               requireAddress={true}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>토론 시간 (분)</FormLabel>
-                <FormControl>
-                  <Input type="number" disabled={loading} {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <Button disabled={loading} className="w-full" type="submit">
             디베이트 생성하기
