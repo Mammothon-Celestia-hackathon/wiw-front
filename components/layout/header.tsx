@@ -9,7 +9,9 @@ export default function Header() {
       <nav className="ml-20 mr-20 flex h-20 items-center justify-between px-4">
         <div className="flex items-center space-x-3">
           <Link href={'/'}>
-            <Image src="/logo.png" alt="Logo" width={90} height={38} />
+            <span className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent hover:from-amber-500 hover:to-amber-700 transition-colors">
+              WIW
+            </span>
           </Link>
           <Link href={'/create-bet'}>
             <Button className=" bg-amber-400 w-30 ml-7 h-8 font-semibold">Create Event</Button>

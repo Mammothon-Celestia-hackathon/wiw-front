@@ -1,8 +1,7 @@
 'use client';
+import { AptosClient } from 'aptos';
 import { useEffect, useState } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-core";
-import { aptosClient, CONTRACT_ADDRESS } from '@/lib/aptos';
 import {
   Card,
   CardContent,
@@ -35,10 +34,17 @@ interface Debate {
   is_finished: boolean;
 }
 
-export const DebateVote = ({ id }: { id: string }) => {
+const client = new AptosClient('https://aptos.testnet.bardock.movementlabs.xyz');
+const CONTRACT_ADDRESS = '0xd7ae4e1e8d4486450936d8fdbb93af0cba8e1ae00c00f82653f76c5d65d76a6f';
+
+interface GameDetailProps {
+  id: string;
+}
+
+export const DebateVote = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
   const [betAmount, setBetAmount] = useState<string>("");
-  const { account, connected, signAndSubmitTransaction } = useWallet();
+  const { account, connected } = useWallet();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -47,14 +53,12 @@ export const DebateVote = ({ id }: { id: string }) => {
       try {
         console.log('Fetching debate with ID:', id);
         
-        const payload = {
-          payload: {
-            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate` as const,
-            functionArguments: [id]
-          }
-        };
+        const response = await client.view({
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
+          type_arguments: [],
+          arguments: [id]
+        });
         
-        const response = await aptosClient.view(payload);
         console.log('Raw response:', response);
         
         if (!response || !response[0]) {
@@ -66,6 +70,7 @@ export const DebateVote = ({ id }: { id: string }) => {
           const debateData = response[0] as any;
           console.log('Debate data:', debateData);
           
+          // 데이터 구조 검증
           if (!debateData.id || !debateData.name || !debateData.topic || !debateData.ai_a || !debateData.ai_b) {
             console.error('Missing required fields in debate data:', debateData);
             return;
@@ -117,7 +122,7 @@ export const DebateVote = ({ id }: { id: string }) => {
     if (!connected || !account) {
       toast({
         variant: "destructive",
-        title: "지갑을 연결해주세요",
+        title: "Connect your wallet",
       });
       return;
     }
@@ -125,7 +130,7 @@ export const DebateVote = ({ id }: { id: string }) => {
     if (!betAmount || isNaN(Number(betAmount)) || Number(betAmount) <= 0) {
       toast({
         variant: "destructive",
-        title: "올바른 베팅 금액을 입력해주세요",
+        title: "Enter a valid bet amount",
       });
       return;
     }
@@ -134,45 +139,36 @@ export const DebateVote = ({ id }: { id: string }) => {
       setLoading(true);
       const amount = Number(betAmount) * 100000000; // Convert APT to Octas
       
-      const transaction: InputTransactionData = {
-        data: {
-          function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
-          typeArguments: [],
-          functionArguments: [
-            debate?.id.toString() || "0",
-            amount.toString(),
-            choice.toString()
-          ],
-        }
+      const payload = {
+        type: "entry_function_payload",
+        function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
+        type_arguments: [],
+        arguments: [debate?.id || 0, amount, choice]
       };
 
-      const response = await signAndSubmitTransaction(transaction);
-      console.log('Transaction Response:', response);
+      await window.aptos?.signAndSubmitTransaction(payload);
       
-      // Refresh debate data
-      const payload = {
-        payload: {
-          function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate` as const,
-          functionArguments: [id]
-        }
-      };
+      const response = await client.view({
+        function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
+        type_arguments: [],
+        arguments: [parseInt(id)]
+      });
       
-      const debateResponse = await aptosClient.view(payload);
-      if (debateResponse && debateResponse[0]) {
-        setDebate(debateResponse[0] as Debate);
-        setBetAmount(""); // Reset bet amount after successful bet
+      if (response && response[0]) {
+        setDebate(response[0] as Debate);
+        setBetAmount(""); // 베팅 성공 후 입력값 초기화
       }
       
-      toast({ title: "투표 성공" });
+      toast({ title: "Vote successful" });
     } catch (error) {
       console.error('Error voting:', error);
-      toast({ variant: 'destructive', title: "투표 실패" });
+      toast({ variant: 'destructive', title: "Vote failed" });
     } finally {
       setLoading(false);
     }
   };
 
-  if (!debate) return <div>Loading game details...</div>;
+  if (!debate) return <div>Loading debate details...</div>;
 
   return (
     <div className="space-y-6">
@@ -208,7 +204,7 @@ export const DebateVote = ({ id }: { id: string }) => {
           <CardContent className="space-y-4">
             <Input
               type="number"
-              placeholder="베팅 금액 (APT)"
+              placeholder="Bet Amount (APT)"
               value={betAmount}
               onChange={(e) => setBetAmount(e.target.value)}
               disabled={debate.is_finished}
@@ -242,7 +238,7 @@ export const DebateVote = ({ id }: { id: string }) => {
           <CardContent className="space-y-4">
             <Input
               type="number"
-              placeholder="베팅 금액 (APT)"
+              placeholder="Bet Amount (APT)"
               value={betAmount}
               onChange={(e) => setBetAmount(e.target.value)}
               disabled={debate.is_finished}

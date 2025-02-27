@@ -2,9 +2,8 @@
 
 import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AptosClient, Types } from 'aptos';
+import { aptosClient, CONTRACT_ADDRESS } from '@/lib/aptos';
 import { AptosWalletContext } from './layout/providers';
-import { CONTRACT_ADDRESS } from '@/lib/aptos';
 import {
   Card,
   CardContent,
@@ -14,8 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Chat from './chat';
-
-const client = new AptosClient('https://testnet.aptoslabs.com');
 
 const fetchTokenPrice = async (tokenAddress: string): Promise<number | null> => {
   try {
@@ -45,35 +42,55 @@ export function GameDetailVote() {
   const { id } = params as { id: string };
   const [betAmount, setBetAmount] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<'A' | 'B' | null>(null);
-  const [gamePhase, setGamePhase] = useState<'preview' | 'betting' | 'debate' | 'ended'>('preview');
-  const [startPrice, setStartPrice] = useState<number | null>(null);
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [debate, setDebate] = useState<any>(null);
+  const [poolInfo, setPoolInfo] = useState<{total: number, aPool: number, bPool: number} | null>(null);
   const { account, connect, isConnected } = useContext(AptosWalletContext);
 
   useEffect(() => {
-    const fetchDebate = async () => {
+    const fetchDebateAndPool = async () => {
       try {
-        const resource = await client.getAccountResource(
-          CONTRACT_ADDRESS,
-          "debate::ai_debate::DebateStore"
-        );
-        
-        const debateStore = resource.data as any;
-        const currentDebate = debateStore.debates[Number(id) - 1];
-        setDebate(currentDebate);
+        // Fetch debate info
+        const debateResponse = await aptosClient.view({
+          payload: {
+            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
+            typeArguments: [],
+            arguments: [Number(id)]
+          }
+        });
 
-        // 토큰 가격 조회
-        const price = await fetchTokenPrice('0x55d398326f99059ff775485246999027b3197955');
-        setStartPrice(price);
-        setCurrentPrice(price);
+        if (!debateResponse || !debateResponse[0]) {
+          console.error('Invalid debate response format:', debateResponse);
+          return;
+        }
+
+        const debateData = debateResponse[0] as any;
+        console.log('Debate data:', debateData);
+        setDebate(debateData);
+
+        // Fetch pool info
+        const poolResponse = await aptosClient.view({
+          payload: {
+            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate_pool`,
+            typeArguments: [],
+            arguments: [Number(id)]
+          }
+        });
+
+        if (poolResponse && poolResponse.length === 3) {
+          setPoolInfo({
+            total: Number(poolResponse[0]),
+            aPool: Number(poolResponse[1]),
+            bPool: Number(poolResponse[2])
+          });
+        }
+
       } catch (error) {
         console.error('Error fetching debate:', error);
       }
     };
 
     if (id) {
-      fetchDebate();
+      fetchDebateAndPool();
     }
   }, [id]);
 
@@ -88,20 +105,37 @@ export function GameDetailVote() {
 
     try {
       const transaction = {
-        type: "entry_function_payload",
-        function: `${CONTRACT_ADDRESS}::ai_debate::place_bet`,
-        type_arguments: [],
-        arguments: [
-          debate.id,
-          (Number(betAmount) * 100000000).toString(), // Convert to Octas (10^8)
-          selectedAgent === 'A' ? '1' : '2' // AI_A = 1, AI_B = 2
-        ]
+        data: {
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
+          typeArguments: [],
+          arguments: [
+            debate.id,
+            (Number(betAmount) * 100000000).toString(),
+            selectedAgent === 'A' ? '1' : '2'
+          ]
+        }
       };
 
       if (window.aptos) {
         const pendingTx = await window.aptos.signAndSubmitTransaction(transaction);
         console.log('Pending tx:', pendingTx);
-        // 여기에 트랜잭션 성공 처리 로직 추가
+        
+        // Refresh pool info after successful bet
+        const poolResponse = await aptosClient.view({
+          payload: {
+            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate_pool`,
+            typeArguments: [],
+            arguments: [Number(id)]
+          }
+        });
+
+        if (poolResponse && poolResponse.length === 3) {
+          setPoolInfo({
+            total: Number(poolResponse[0]),
+            aPool: Number(poolResponse[1]),
+            bPool: Number(poolResponse[2])
+          });
+        }
       }
     } catch (error) {
       console.error('Error placing bet:', error);

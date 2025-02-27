@@ -1,7 +1,6 @@
 'use client';
 import { GameDetail } from '@/components/game-detail';
 import { GameDetailComment } from '@/components/game-detail-comment';
-import { GameDetailVote } from '@/components/game-detail-vote';
 import { DebateVote } from '@/components/debate-vote';
 import { useParams } from 'next/navigation';
 

@@ -8,7 +8,7 @@ export const Account = () => {
 
   const handleConnect = async () => {
     try {
-      await connect("Razor" as WalletName<"Razor">);
+      await connect("Petra" as WalletName<"Petra">);
       console.log('Connected to wallet:', account);
     } catch (error) {
       console.error('Failed to connect to wallet:', error);
