@@ -1,7 +1,7 @@
 'use client';
-import { AptosClient } from 'aptos';
 import { useEffect, useState } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { aptosClient, CONTRACT_ADDRESS } from '@/lib/aptos';
 import {
   Card,
   CardContent,
@@ -41,8 +41,6 @@ interface Message {
   avatar: string;
 }
 
-const client = new AptosClient('https://testnet.aptoslabs.com');
-
 const DUMMY_MESSAGES: Message[] = [
   {
     id: 1,
@@ -78,19 +76,20 @@ export const GameDetail = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
   const [messages] = useState<Message[]>(DUMMY_MESSAGES);
   const { account, connected } = useWallet();
-  const CONTRACT_ADDRESS = '0x18693562f4ced0fd77d6b42416003a5945d15358431fbff2b9af0e4b0759d261';
 
   useEffect(() => {
     const fetchDebate = async () => {
       try {
         console.log('Fetching debate with ID:', id);
         
-        const response = await client.view({
-          function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
-          type_arguments: [],
-          arguments: [id]
-        });
+        const payload = {
+          payload: {
+            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate` as const,
+            functionArguments: [id]
+          }
+        };
         
+        const response = await aptosClient.view(payload);
         console.log('Raw response:', response);
         
         if (!response || !response[0]) {
@@ -102,7 +101,6 @@ export const GameDetail = ({ id }: GameDetailProps) => {
           const debateData = response[0] as any;
           console.log('Debate data:', debateData);
           
-          // 데이터 구조 검증
           if (!debateData.id || !debateData.name || !debateData.topic || !debateData.ai_a || !debateData.ai_b) {
             console.error('Missing required fields in debate data:', debateData);
             return;
