@@ -18,6 +18,8 @@ import * as z from 'zod';
 import { useToast } from './ui/use-toast';
 import React from 'react';
 import { AgentFormFields } from './agent-form-fields';
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { InputTransactionData } from "@aptos-labs/wallet-adapter-core";
 
 const formSchema = z.object({
   name: z.string().min(3, "게임 이름은 최소 3자 이상이어야 합니다"),
@@ -32,10 +34,9 @@ const formSchema = z.object({
     character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
     address: z.string().min(1, "주소를 입력해주세요")
   }),
-  duration: z.number().min(1, "토론 시간은 최소 1분 이상이어야 합니다"),
 });
 
-const CONTRACT_ADDRESS = "0x18693562f4ced0fd77d6b42416003a5945d15358431fbff2b9af0e4b0759d261";
+const CONTRACT_ADDRESS = "0xd7ae4e1e8d4486450936d8fdbb93af0cba8e1ae00c00f82653f76c5d65d76a6f";
 
 export const CreateForm = () => {
   const { toast } = useToast();
@@ -44,6 +45,7 @@ export const CreateForm = () => {
   const [agentBTags, setAgentBTags] = useState<string[]>([]);
   const [agentACharacter, setAgentACharacter] = useState('');
   const [agentBCharacter, setAgentBCharacter] = useState('');
+  const { account, connected, signAndSubmitTransaction } = useWallet();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,7 +54,6 @@ export const CreateForm = () => {
       topic: "",
       agentA: { name: "", character: "", address: "" },
       agentB: { name: "", character: "", address: "" },
-      duration: 5,
     },
   });
 
@@ -60,19 +61,16 @@ export const CreateForm = () => {
     try {
       setLoading(true);
       
-      if (!window.aptos) {
-        toast({ variant: 'destructive', title: "Aptos 지갑을 설치해주세요" });
+      if (!account || !connected) {
+        toast({ variant: 'destructive', title: "지갑을 연결해주세요" });
         return;
       }
 
-      const { address } = await window.aptos.connect();
-      
-      const transaction = {
-        payload: {
-          type: "entry_function_payload",
-          function: `${CONTRACT_ADDRESS}::ai_debate_v2::create_debate`,
-          type_arguments: [],
-          arguments: [
+      const transaction: InputTransactionData = {
+        data: {
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::create_debate`,
+          typeArguments: [],
+          functionArguments: [
             values.name,
             values.topic,
             values.agentA.name,
@@ -81,12 +79,11 @@ export const CreateForm = () => {
             values.agentB.name,
             values.agentB.character,
             values.agentB.address,
-            values.duration * 60,
           ],
         }
       };
 
-      const response = await window.aptos.signAndSubmitTransaction(transaction);
+      const response = await signAndSubmitTransaction(transaction);
       console.log('Transaction Response:', response);
       toast({ title: "디베이트 생성 성공" });
     } catch (error) {
@@ -168,20 +165,6 @@ export const CreateForm = () => {
               requireAddress={true}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>토론 시간 (분)</FormLabel>
-                <FormControl>
-                  <Input type="number" disabled={loading} {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <Button disabled={loading} className="w-full" type="submit">
             디베이트 생성하기

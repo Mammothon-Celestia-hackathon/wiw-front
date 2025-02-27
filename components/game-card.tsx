@@ -17,6 +17,7 @@ interface GameCardProps {
   totalPool: number;
   endTime: number;
   isFinished: boolean;
+  winner?: string;
 }
 
 export const GameCard = ({
@@ -27,7 +28,8 @@ export const GameCard = ({
   aiB,
   totalPool,
   endTime,
-  isFinished
+  isFinished,
+  winner
 }: GameCardProps) => {
   const router = useRouter();
 

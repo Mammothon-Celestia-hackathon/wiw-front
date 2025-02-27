@@ -1,7 +1,7 @@
 'use client';
-import { AptosClient } from 'aptos';
 import { useEffect, useState } from 'react';
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { aptosClient, CONTRACT_ADDRESS } from '@/lib/aptos';
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ interface AIAgent {
 
 interface Debate {
   id: number;
+  name: string;
   topic: string;
   creator: string;
   ai_a: AIAgent;
@@ -28,7 +29,6 @@ interface Debate {
   total_pool: number;
   ai_a_pool: number;
   ai_b_pool: number;
-  end_time: number;
   winner: number;
   is_finished: boolean;
 }
@@ -41,8 +41,6 @@ interface Message {
   isA: boolean;
   avatar: string;
 }
-
-const client = new AptosClient('https://testnet.aptoslabs.com');
 
 const DUMMY_MESSAGES: Message[] = [
   {
@@ -79,19 +77,20 @@ export const GameDetail = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
   const [messages] = useState<Message[]>(DUMMY_MESSAGES);
   const { account, connected } = useWallet();
-  const CONTRACT_ADDRESS = '0x18693562f4ced0fd77d6b42416003a5945d15358431fbff2b9af0e4b0759d261';
 
   useEffect(() => {
     const fetchDebate = async () => {
       try {
         console.log('Fetching debate with ID:', id);
         
-        const response = await client.view({
-          function: `${CONTRACT_ADDRESS}::ai_debate_v2::get_debate`,
-          type_arguments: [],
-          arguments: [id]
-        });
+        const payload = {
+          payload: {
+            function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate` as const,
+            functionArguments: [id]
+          }
+        };
         
+        const response = await aptosClient.view(payload);
         console.log('Raw response:', response);
         
         if (!response || !response[0]) {
@@ -103,14 +102,14 @@ export const GameDetail = ({ id }: GameDetailProps) => {
           const debateData = response[0] as any;
           console.log('Debate data:', debateData);
           
-          // 데이터 구조 검증
-          if (!debateData.id || !debateData.topic || !debateData.ai_a || !debateData.ai_b) {
+          if (!debateData.id || !debateData.name || !debateData.topic || !debateData.ai_a || !debateData.ai_b) {
             console.error('Missing required fields in debate data:', debateData);
             return;
           }
 
           const debate: Debate = {
             id: Number(debateData.id),
+            name: debateData.name,
             topic: debateData.topic,
             creator: debateData.creator,
             ai_a: {
@@ -126,7 +125,6 @@ export const GameDetail = ({ id }: GameDetailProps) => {
             total_pool: Number(debateData.total_pool),
             ai_a_pool: Number(debateData.ai_a_pool),
             ai_b_pool: Number(debateData.ai_b_pool),
-            end_time: Number(debateData.end_time),
             winner: Number(debateData.winner),
             is_finished: debateData.is_finished
           };
@@ -151,72 +149,10 @@ export const GameDetail = ({ id }: GameDetailProps) => {
     }
   }, [id]);
 
-  const getTimeLeft = (endTime: number) => {
-    const now = Math.floor(Date.now() / 1000);
-    const timeLeft = endTime - now;
-    if (timeLeft <= 0) return '종료됨';
-    
-    const hours = Math.floor(timeLeft / 3600);
-    const minutes = Math.floor((timeLeft % 3600) / 60);
-    return `${hours}시간 ${minutes}분 남음`;
-  };
-
   if (!debate) return <div>Loading game details...</div>;
 
   return (
     <div className="space-y-6">
-      <div className="space-y-6">
-        <h1 className="mb-5 scroll-m-20 text-3xl font-extrabold tracking-tight lg:text-3xl">
-          {debate?.topic}
-        </h1>
-
-        <div className="flex space-x-6">
-          <Badge className="text-xs bg-white text-F7F8F8 rounded-3xl p-1.5 px-5">
-            {getTimeLeft(debate.end_time)}
-          </Badge>
-          <Badge className="text-xs bg-white text-F7F8F8 rounded-3xl p-1.5 px-5">
-            {debate.is_finished ? "Finished" : "Live"}
-          </Badge>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-[#00A29A]/5 to-transparent border-[#00A29A]/20">
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-[#00A29A]/10 flex items-center justify-center text-2xl">
-                🐂
-              </div>
-              <div>
-                <CardTitle className="text-[#00A29A]">
-                  {debate.ai_a.address.slice(0, 6)}...{debate.ai_a.address.slice(-4)}
-                </CardTitle>
-                <CardDescription>
-                  {Number(debate.ai_a_pool) / 100000000} APT Staked
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-[#C73535]/5 to-transparent border-[#C73535]/20">
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-[#C73535]/10 flex items-center justify-center text-2xl">
-                🐻
-              </div>
-              <div>
-                <CardTitle className="text-[#C73535]">
-                  {debate.ai_b.address.slice(0, 6)}...{debate.ai_b.address.slice(-4)}
-                </CardTitle>
-                <CardDescription>
-                  {Number(debate.ai_b_pool) / 100000000} APT Staked
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-      </div>
 
       <Card className="bg-gradient-to-b from-white to-gray-50/50">
         <CardHeader className="border-b">

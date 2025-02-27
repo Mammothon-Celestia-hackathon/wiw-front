@@ -13,7 +13,6 @@ export default function page() {
       Get precise news and predict the price
       </h1>
       <div>
-        <GameList/>
         <GameListContract/>
       </div>
     </div>
