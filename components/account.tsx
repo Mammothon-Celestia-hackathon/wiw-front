@@ -1,45 +1,35 @@
 'use client';
 
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { WalletName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from './ui/button';
-import { ellipsisAddress } from '@/utils/strings';
-import { Wallet, LogOut } from 'lucide-react';
 
 export const Account = () => {
-  const { account, connected, connect, disconnect, wallets } = useWallet();
+  const { connect, disconnect, account, connected } = useWallet();
 
-  const handleConnect = () => {
-    const okxWallet = wallets?.find(wallet => 
-      wallet.name.toLowerCase().includes('okx')
-    );
-    
-    if (okxWallet) {
-      connect(okxWallet.name);
+  const handleConnect = async () => {
+    try {
+      await connect("Razor" as WalletName<"Razor">);
+      console.log('Connected to wallet:', account);
+    } catch (error) {
+      console.error('Failed to connect to wallet:', error);
     }
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      {connected && account ? (
+    <div>
+      {connected ? (
         <Button 
-          onClick={() => disconnect()} 
-          variant="outline"
-          className="rounded-full px-6 py-2 flex items-center space-x-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-all duration-200"
+          onClick={disconnect}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full px-6 py-2"
         >
-          <LogOut className="w-4 h-4" />
-          <span className="font-medium">
-            {ellipsisAddress(account.address)}
-          </span>
+          {account?.address?.slice(0, 6)}...
         </Button>
       ) : (
         <Button 
           onClick={handleConnect}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full px-6 py-2 flex items-center space-x-2 shadow-lg transition-all duration-200 hover:shadow-blue-200"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full px-6 py-2"
         >
-          <Wallet className="w-4 h-4" />
-          <span className="font-medium">
-            Connect Wallet
-          </span>
+          Connect Wallet
         </Button>
       )}
     </div>

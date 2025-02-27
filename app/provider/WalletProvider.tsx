@@ -1,32 +1,25 @@
 'use client';
 
-import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
+import { WalletProvider as RazorWalletProvider, IDefaultWallet } from "@razorlabs/razorkit";
 import { PropsWithChildren } from "react";
-import { AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { OKXWallet } from "@okwallet/aptos-wallet-adapter";
+
+const defaultWallets: IDefaultWallet[] = [
+  {
+    name: "Razor Wallet",
+    label: "Razor Wallet",
+    iconUrl: "https://razorwallet.xyz/favicon.ico",
+    downloadUrl: {
+      browserExtension: "https://razorwallet.xyz"
+    }
+  }
+];
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
-  const wallets = [
-    new OKXWallet(),
-  ];
-
-  // Movement Bardock Testnet 설정
-  const config = new AptosConfig({
-    network: Network.CUSTOM,
-    fullnode: 'https://aptos.testnet.bardock.movementlabs.xyz/v1',
-    faucet: 'https://fund.testnet.bardock.movementlabs.xyz/',
-});
-
   return (
-    <AptosWalletAdapterProvider
-      plugins={wallets}
-      autoConnect={true}
-      dappConfig={config}
-      onError={(error) => {
-        console.log("Wallet Error:", error);
-      }}
+    <RazorWalletProvider
+      defaultWallets={defaultWallets}
     >
       {children}
-    </AptosWalletAdapterProvider>
+    </RazorWalletProvider>
   );
 };
