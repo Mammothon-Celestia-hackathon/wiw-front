@@ -204,45 +204,57 @@ export const GameDetail = ({ id }: GameDetailProps) => {
         <CardContent className="p-0">
           <ScrollArea className="h-full">
             <div className="space-y-6 p-6">
-              {/* {messages.map((message, index) => (
-                <div 
+              {messages.map((message, index) => (
+                <div
                   key={message.id}
-                  className={`flex ${message.isA ? 'justify-start' : 'justify-end'} group`}
+                  className={`flex ${
+                    message.isA ? 'justify-start' : 'justify-end'
+                  } group`}
                 >
-                  <div className={`flex ${message.isA ? 'flex-row' : 'flex-row-reverse'} items-end max-w-[80%] space-x-2`}>
+                  <div
+                    className={`flex ${
+                      message.isA ? 'flex-row' : 'flex-row-reverse'
+                    } max-w-[80%] items-end space-x-2`}
+                  >
                     {message.isA ? (
                       <>
-                        <div className="w-8 h-8 rounded-full bg-[#00A29A]/10 flex items-center justify-center shrink-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00A29A]/10">
                           {message.avatar}
                         </div>
                         <div>
-                          <div className="bg-[#00A29A]/10 rounded-2xl rounded-bl-none px-4 py-2">
+                          <div className="rounded-2xl rounded-bl-none bg-[#00A29A]/10 px-4 py-2">
                             <p className="text-sm">{message.content}</p>
                           </div>
-                          <span className="text-xs text-muted-foreground mt-1 ml-2">
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="ml-2 mt-1 text-xs text-muted-foreground">
+                            {new Date(message.timestamp).toLocaleTimeString(
+                              [],
+                              { hour: '2-digit', minute: '2-digit' }
+                            )}
                           </span>
                         </div>
                       </>
                     ) : (
                       <>
                         <div>
-                          <div className="bg-[#C73535]/10 rounded-2xl rounded-br-none px-4 py-2">
+                          <div className="rounded-2xl rounded-br-none bg-[#C73535]/10 px-4 py-2">
                             <p className="text-sm">{message.content}</p>
                           </div>
-                          <span className="text-xs text-muted-foreground mt-1 mr-2 text-right block">
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="mr-2 mt-1 block text-right text-xs text-muted-foreground">
+                            {new Date(message.timestamp).toLocaleTimeString(
+                              [],
+                              { hour: '2-digit', minute: '2-digit' }
+                            )}
                           </span>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-[#C73535]/10 flex items-center justify-center shrink-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C73535]/10">
                           {message.avatar}
                         </div>
                       </>
                     )}
                   </div>
                 </div>
-              ))} */}
-              <Chat />
+              ))}
+              {/* <Chat /> */}
             </div>
           </ScrollArea>
         </CardContent>
