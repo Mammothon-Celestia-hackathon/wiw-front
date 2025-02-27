@@ -2,6 +2,8 @@ import type { Agents, TextResponse } from '@/api';
 import { useSendMessageMutation } from '@/api';
 import { useEffect, useRef, useState } from 'react';
 import { ROUTES } from '@/api/routes';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 export default function Chat() {
   const [agents, setAgents] = useState<Agents | null>(null);
@@ -30,8 +32,8 @@ export default function Chat() {
 
   const handleDebate = (lastMessage: TextResponse) => {
     if (!lastMessage) return;
-    if (lastMessage.text.includes('lose')) {
-      // 여기서 특정 단어가 있으면 끝나는 것으로 판단
+    if (lastMessage.action === 'FINALIZE_DEBATE') {
+      // action이 finalize debate이면 토론 종료
       setIsDebating(false);
       console.log('debate is over');
     }
@@ -48,7 +50,7 @@ export default function Chat() {
 
     // Add user message immediately to state
     const userMessage: TextResponse = {
-      // 유저 메시지를 에이전트 끼리 메시지로 바꿔야 함. 내일 생각해보셈
+      // 유저 메시지를 에이전트 끼리 메시지로 바꿔야 함.
       text: input,
       user: 'user',
       attachments: selectedFile
@@ -111,11 +113,11 @@ export default function Chat() {
               <div
                 key={index}
                 className={`flex text-left ${
-                  message.user === 'agentA' ? 'justify-end' : 'justify-start'
+                  message.user === 'Eliza' ? 'justify-end' : 'justify-start'
                 }`}
               >
                 <pre className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-muted px-4 py-2">
-                  {message.user === 'agentA' ? 'bull' : 'bear'}
+                  {message.user === 'Eliza' ? 'bull' : 'bear'}
                   {message.text}
                 </pre>
               </div>
@@ -131,27 +133,18 @@ export default function Chat() {
 
       <div className="border-t bg-background p-4">
         <div className="mx-auto max-w-3xl">
-          {/* <form onSubmit={handleSubmit} className="flex gap-2">
-                        <Input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type a message..."
-                            className="flex-1"
-                            disabled={isPending}
-                        />
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleFileSelect}
-                            disabled={isPending}
-                        >
-                            <ImageIcon className="h-4 w-4" />
-                        </Button>
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? "..." : "Send"}
-                        </Button>
-                    </form> */}
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1"
+              disabled={isPending}
+            />
+            <Button type="submit" disabled={isPending}>
+              {isPending ? '...' : 'Send'}
+            </Button>
+          </form>
         </div>
       </div>
     </div>

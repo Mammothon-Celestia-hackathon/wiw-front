@@ -1,73 +1,73 @@
-import type { CustomMutationResult } from "../types";
+import type { CustomMutationResult } from '../types';
 
-import { useMutation } from "@tanstack/react-query";
-import { ROUTES } from "../routes";
-import { SetStateAction } from "react";
+import { useMutation } from '@tanstack/react-query';
+import { ROUTES } from '../routes';
+import { SetStateAction } from 'react';
 
 export type Agent = {
-    clients: string[];
-    id: string;
-    name: string;
-  }
-  
-export type Agents = {
-    A: Agent;
-    B: Agent;
-}
+  clients: string[];
+  id: string;
+  name: string;
+};
 
+export type Agents = {
+  A: Agent;
+  B: Agent;
+};
 
 export type TextResponse = {
-    text: string;
-    user: string;
-    attachments?: { url: string; contentType: string; title: string }[];
+  text: string;
+  user: string;
+  attachments?: { url: string; contentType: string; title: string }[];
+  action?: string;
 };
 
 type SendMessageMutationProps = {
-    text: string;
-    agentId: string;
-    selectedFile: File | null;
+  text: string;
+  agentId: string;
+  selectedFile: File | null;
 };
 
 type Props = Required<{
-    setMessages: (value: SetStateAction<TextResponse[]>) => void;
-    setSelectedFile: (value: SetStateAction<File | null>) => void;
+  setMessages: (value: SetStateAction<TextResponse[]>) => void;
+  setSelectedFile: (value: SetStateAction<File | null>) => void;
 }>;
 
 export const useSendMessageMutation = ({
-    setMessages,
-    setSelectedFile,
+  setMessages,
+  setSelectedFile
 }: Props): CustomMutationResult<TextResponse[], SendMessageMutationProps> => {
-    const mutation = useMutation({
-        mutationFn: async ({
-            text,
-            agentId,
-            selectedFile,
-        }: SendMessageMutationProps) => {
-            const formData = new FormData();
-            formData.append("text", text);
-            formData.append("userId", "user");
+  const mutation = useMutation({
+    mutationFn: async ({
+      text,
+      agentId,
+      selectedFile
+    }: SendMessageMutationProps) => {
+      const formData = new FormData();
+      formData.append('text', text);
+      formData.append('userId', 'user');
 
-            formData.append("roomId", `agent-${agentId}`);
+      formData.append('roomId', `agent-${agentId}`);
 
-            if (selectedFile) {
-                formData.append("file", selectedFile);
-            }
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
 
-            const res = await fetch(ROUTES.sendMessage(agentId), {
-                method: "POST",
-                body: formData,
-            });
+      const res = await fetch(ROUTES.sendMessage(agentId), {
+        method: 'POST',
+        body: formData
+      });
 
-            return res.json() as Promise<TextResponse[]>;
-        },
-        onSuccess: (data) => {
-            setMessages((prev) => [...prev, ...data]);
-            setSelectedFile(null);
-        },
-        onError: (error) => {
-            console.error("[useSendMessageMutation]:", error);
-        },
-    });
+      return res.json() as Promise<TextResponse[]>;
+    },
+    onSuccess: (data) => {
+      setMessages((prev) => [...prev, ...data]);
+      setSelectedFile(null);
+    },
+    onError: (error) => {
+      console.error('[useSendMessageMutation]:', error);
+    }
+  });
 
-    return mutation;
+  return mutation;
 };
