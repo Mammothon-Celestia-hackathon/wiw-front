@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import Chat from './chat';
 
 interface AIAgent {
   name: string;
@@ -232,9 +233,9 @@ export const GameDetail = ({ id }: GameDetailProps) => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[600px]">
+          <ScrollArea className="h-full">
             <div className="space-y-6 p-6">
-              {messages.map((message, index) => (
+              {/* {messages.map((message, index) => (
                 <div 
                   key={message.id}
                   className={`flex ${message.isA ? 'justify-start' : 'justify-end'} group`}
@@ -271,7 +272,8 @@ export const GameDetail = ({ id }: GameDetailProps) => {
                     )}
                   </div>
                 </div>
-              ))}
+              ))} */}
+              <Chat/>
             </div>
           </ScrollArea>
         </CardContent>

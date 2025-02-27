@@ -4,6 +4,18 @@ import { useMutation } from "@tanstack/react-query";
 import { ROUTES } from "../routes";
 import { SetStateAction } from "react";
 
+export type Agent = {
+    clients: string[];
+    id: string;
+    name: string;
+  }
+  
+export type Agents = {
+    A: Agent;
+    B: Agent;
+}
+
+
 export type TextResponse = {
     text: string;
     user: string;
@@ -14,7 +26,6 @@ type SendMessageMutationProps = {
     text: string;
     agentId: string;
     selectedFile: File | null;
-    agentPort: string;
 };
 
 type Props = Required<{
@@ -31,7 +42,6 @@ export const useSendMessageMutation = ({
             text,
             agentId,
             selectedFile,
-            agentPort,
         }: SendMessageMutationProps) => {
             const formData = new FormData();
             formData.append("text", text);
@@ -43,7 +53,7 @@ export const useSendMessageMutation = ({
                 formData.append("file", selectedFile);
             }
 
-            const res = await fetch(ROUTES.sendMessage(agentId, agentPort), {
+            const res = await fetch(ROUTES.sendMessage(agentId), {
                 method: "POST",
                 body: formData,
             });

@@ -12,7 +12,7 @@ export const useGetAgentsQuery = (): CustomQueryResult<Agent[] | undefined> => {
     return useQuery({
         queryKey: [Queries.AGENTS],
         queryFn: async () => {
-            const res = await fetch(ROUTES.getAgents("3000"));
+            const res = await fetch(ROUTES.getAgents());
             const data = await res.json();
             return data.agents as Agent[];
         },

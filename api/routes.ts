@@ -1,6 +1,6 @@
 export const ROUTES = {
-    sendMessage: (agentId: string, agentPort: string): string =>
-        `http://localhost:${agentPort}/${agentId}/message`,
-    getAgents: (agentPort: string): string =>
-        `http://localhost:${agentPort}/agents`,
+    sendMessage: (agentId: string): string =>
+        `http://localhost:3000/${agentId}/message`,
+    getAgents: (): string =>
+        `http://localhost:3000/agents`,
 };

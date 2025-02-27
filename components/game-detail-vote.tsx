@@ -109,7 +109,7 @@ export function GameDetailVote() {
   };
 
   if (!debate) {
-    return     <Chat/>
+    return    <></>
     ;
   }
 
