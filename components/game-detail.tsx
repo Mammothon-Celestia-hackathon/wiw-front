@@ -80,7 +80,7 @@ export const GameDetail = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
   const [messages] = useState<Message[]>(DUMMY_MESSAGES);
   const { account, connected } = useWallet();
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(57);
   const [isTimerActive, setIsTimerActive] = useState(true);
 
   useEffect(() => {
