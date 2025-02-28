@@ -18,23 +18,25 @@ import * as z from 'zod';
 import { useToast } from './ui/use-toast';
 import React from 'react';
 import { AgentFormFields } from './agent-form-fields';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  name: z.string().min(1, "Please enter a game name"),
-  topic: z.string().min(1, "Please enter a debate topic"),
+  name: z.string().min(1, 'Please enter a game name'),
+  topic: z.string().min(1, 'Please enter a debate topic'),
   agentA: z.object({
-    name: z.string().min(1, "Please enter AI name"),
-    character: z.string().min(1, "Please enter character description"),
-    address: z.string().min(1, "Please enter address")
+    name: z.string().min(1, 'Please enter AI name'),
+    character: z.string().min(1, 'Please enter character description'),
+    address: z.string().min(1, 'Please enter address')
   }),
   agentB: z.object({
-    name: z.string().min(1, "Please enter AI name"),
-    character: z.string().min(1, "Please enter character description"),
-    address: z.string().min(1, "Please enter address")
-  }),
+    name: z.string().min(1, 'Please enter AI name'),
+    character: z.string().min(1, 'Please enter character description'),
+    address: z.string().min(1, 'Please enter address')
+  })
 });
 
-const CONTRACT_ADDRESS = "0xd7ae4e1e8d4486450936d8fdbb93af0cba8e1ae00c00f82653f76c5d65d76a6f";
+const CONTRACT_ADDRESS =
+  '0xd7ae4e1e8d4486450936d8fdbb93af0cba8e1ae00c00f82653f76c5d65d76a6f';
 
 export const CreateForm = () => {
   const { toast } = useToast();
@@ -43,31 +45,31 @@ export const CreateForm = () => {
   const [agentBTags, setAgentBTags] = useState<string[]>([]);
   const [agentACharacter, setAgentACharacter] = useState('');
   const [agentBCharacter, setAgentBCharacter] = useState('');
-
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      topic: "",
-      agentA: { name: "", character: "", address: "" },
-      agentB: { name: "", character: "", address: "" },
-    },
+      name: '',
+      topic: '',
+      agentA: { name: '', character: '', address: '' },
+      agentB: { name: '', character: '', address: '' }
+    }
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      
+
       if (!window.aptos) {
-        toast({ variant: 'destructive', title: "Please install Aptos Wallet" });
+        toast({ variant: 'destructive', title: 'Please install Aptos Wallet' });
         return;
       }
 
       const { address } = await window.aptos.connect();
-      
+
       const transaction = {
         payload: {
-          type: "entry_function_payload",
+          type: 'entry_function_payload',
           function: `${CONTRACT_ADDRESS}::ai_debate_v4::create_debate`,
           type_arguments: [],
           arguments: [
@@ -78,17 +80,17 @@ export const CreateForm = () => {
             values.agentA.address,
             values.agentB.name,
             values.agentB.character,
-            values.agentB.address,
-          ],
+            values.agentB.address
+          ]
         }
       };
 
       const response = await window.aptos.signAndSubmitTransaction(transaction);
       console.log('Transaction Response:', response);
-      toast({ title: "Debate created successfully" });
+      toast({ title: 'Debate created successfully' });
     } catch (error) {
       console.error('Error details:', error);
-      toast({ variant: 'destructive', title: "Failed to create debate" });
+      toast({ variant: 'destructive', title: 'Failed to create debate' });
     } finally {
       setLoading(false);
     }
@@ -109,7 +111,11 @@ export const CreateForm = () => {
               <FormItem>
                 <FormLabel>Game Name</FormLabel>
                 <FormControl>
-                  <Input disabled={loading} placeholder="Enter game name" {...field} />
+                  <Input
+                    disabled={loading}
+                    placeholder="Enter game name"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -123,14 +129,18 @@ export const CreateForm = () => {
               <FormItem>
                 <FormLabel>Debate Topic</FormLabel>
                 <FormControl>
-                  <Input disabled={loading} placeholder="Enter debate topic" {...field} />
+                  <Input
+                    disabled={loading}
+                    placeholder="Enter debate topic"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <AgentFormFields
               form={form}
               type="A"
@@ -166,7 +176,12 @@ export const CreateForm = () => {
             />
           </div>
 
-          <Button disabled={loading} className="w-full" type="submit">
+          <Button
+            disabled={loading}
+            className="w-full"
+            type="submit"
+            onClick={() => router.push('/')}
+          >
             Create Debate
           </Button>
         </form>

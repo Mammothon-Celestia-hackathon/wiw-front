@@ -17,8 +17,6 @@ export default function Chat() {
     setSelectedFile
   });
   const [isDebating, setIsDebating] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(13);
-  const [isTimerActive, setIsTimerActive] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,25 +32,19 @@ export default function Chat() {
     }
   }, [messages, isPending]);
 
+  // 15초 후에 메시지를 전송하는 useEffect 추가
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    if (isTimerActive && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          const newTime = prev - 0.1;
-          if (newTime <= 0) {
-            setIsTimerActive(false);
-            handleTimeUp();
-            return 0;
-          }
-          return newTime;
+    if (agents) {
+      const timeoutId = setTimeout(() => {
+        sendMessage({
+          text: 'blackrock dumps bitcoin $441M. it could be affect to market, bitcoin price will be go down under the 77k?',
+          agentId: agents.B.id,
+          selectedFile: null
         });
-      }, 100);
+      }, 30000);
+      return () => clearTimeout(timeoutId);
     }
-
-    return () => clearInterval(timer);
-  }, [isTimerActive]);
+  }, [agents, sendMessage]);
 
   const handleDebate = (lastMessage: TextResponse) => {
     if (!lastMessage) return;
@@ -68,13 +60,12 @@ export default function Chat() {
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // 이 곳이 엘리자한테 텍스트 보내는 곳. 여길 좀 집중공략해야 할 덧
+    // 이 곳이 엘리자한테 텍스트 보내는 곳.
     e.preventDefault();
     if ((!input.trim() && !selectedFile) || !agents) return;
 
     // Add user message immediately to state
     const userMessage: TextResponse = {
-      // 유저 메시지를 에이전트 끼리 메시지로 바꿔야 함.
       text: input,
       user: 'user',
       attachments: selectedFile
@@ -92,8 +83,8 @@ export default function Chat() {
       text: input,
       agentId: agents.A.id,
       selectedFile
-    }); // 여기서 eliza한테 메시지 보냄. e.target.value를 agent의 응답으로 사용
-    setInput(''); // input 초기화
+    });
+    setInput('');
   };
 
   const relayMessage = (message: TextResponse) => {
@@ -138,9 +129,9 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-auto min-h-[500px] w-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <ScrollArea className="h-auto">
+    <ScrollArea className="h-auto">
+      <div className="flex h-auto min-h-[500px] w-full flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="space-y-6 p-6">
             {messages.length > 0 ? (
               messages.map((message, index) => (
@@ -188,24 +179,8 @@ export default function Chat() {
             )}
             <div ref={messagesEndRef} />
           </div>
-          <div className="border-t bg-background p-4">
-            <div className="mx-auto max-w-3xl">
-              <form onSubmit={handleSubmit} className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1"
-                  disabled={isPending}
-                />
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? '...' : 'Send'}
-                </Button>
-              </form>
-            </div>
-          </div>
-        </ScrollArea>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 }
