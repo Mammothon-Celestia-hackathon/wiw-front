@@ -12,6 +12,7 @@ interface AIAgent {
 
 interface Debate {
   id: number;
+  contractId: number;
   name: string;
   topic: string;
   creator: string;
@@ -52,7 +53,8 @@ export const GameListContract = () => {
             
             const debateData = response[0] as any;
             allDebates.push({
-              id: Number(debateData.id),
+              id: debateId,
+              contractId: Number(debateData.id),
               name: debateData.name,
               topic: debateData.topic,
               creator: debateData.creator,
@@ -130,7 +132,7 @@ export const GameListContract = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ongoingDebates.map((debate) => (
                 <GameCard
-                  key={debate.id}
+                  key={debate.contractId}
                   id={debate.id}
                   name={debate.name}
                   topic={debate.topic}
@@ -155,7 +157,7 @@ export const GameListContract = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {endedDebates.map((debate) => (
                 <GameCard
-                  key={debate.id}
+                  key={debate.contractId}
                   id={debate.id}
                   name={debate.name}
                   topic={debate.topic}
