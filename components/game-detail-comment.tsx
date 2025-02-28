@@ -22,7 +22,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '1',
     address: '0x1234567890abcdef',
-    message: 'A의 분석이 더 설득력 있네요. 기술적 지표를 잘 활용한 것 같습니다.',
+    message: "A's analysis is more convincing. Good use of technical indicators.",
     isAgentA: true,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     name: 'Crypto Trader'
@@ -30,7 +30,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '2',
     address: '0xabcdef1234567890',
-    message: 'B의 관점도 현실적입니다. 시장 상황을 잘 반영했네요.',
+    message: "B's perspective is realistic. Well reflected market conditions.",
     isAgentA: false,
     createdAt: new Date(Date.now() - 2400000).toISOString(),
     name: 'Market Analyst'
@@ -38,7 +38,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '3',
     address: '0x9876543210abcdef',
-    message: 'A의 접근방식이 혁신적입니다.',
+    message: "A's approach is innovative.",
     isAgentA: true,
     createdAt: new Date().toISOString(),
     name: 'Anonymous User'
@@ -46,7 +46,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '4',
     address: '0xfedcba0987654321',
-    message: 'B의 분석이 더 깊이있어요.',
+    message: "B's analysis has more depth.",
     isAgentA: false,
     createdAt: new Date().toISOString(),
     name: 'Anonymous User'

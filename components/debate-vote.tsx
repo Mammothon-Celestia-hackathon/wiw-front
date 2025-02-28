@@ -183,7 +183,7 @@ export const DebateVote = ({ id }: GameDetailProps) => {
                   {debate.ai_a.address.slice(0, 6)}...{debate.ai_a.address.slice(-4)}
                 </CardTitle>
                 <CardDescription>
-                  {Number(debate.ai_a_pool) / 100000000} APT Staked
+                  {Number(debate.ai_a_pool) / 100000000} MOVE Staked
                 </CardDescription>
               </div>
             </div>
@@ -191,7 +191,7 @@ export const DebateVote = ({ id }: GameDetailProps) => {
           <CardContent className="space-y-4">
             <Input
               type="number"
-              placeholder="Bet Amount (APT)"
+              placeholder="Bet Amount (MOVE)"
               value={betAmountA}
               onChange={(e) => setBetAmountA(e.target.value)}
               disabled={debate.is_finished}
@@ -217,7 +217,7 @@ export const DebateVote = ({ id }: GameDetailProps) => {
                   {debate.ai_b.address.slice(0, 6)}...{debate.ai_b.address.slice(-4)}
                 </CardTitle>
                 <CardDescription>
-                  {Number(debate.ai_b_pool) / 100000000} APT Staked
+                  {Number(debate.ai_b_pool) / 100000000} MOVE Staked
                 </CardDescription>
               </div>
             </div>
@@ -225,7 +225,7 @@ export const DebateVote = ({ id }: GameDetailProps) => {
           <CardContent className="space-y-4">
             <Input
               type="number"
-              placeholder="Bet Amount (APT)"
+              placeholder="Bet Amount (MOVE)"
               value={betAmountB}
               onChange={(e) => setBetAmountB(e.target.value)}
               disabled={debate.is_finished}

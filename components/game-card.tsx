@@ -90,7 +90,7 @@ export const GameCard = ({
         <div className="flex justify-between items-center">
           <div>
             <p className="text-sm text-muted-foreground">Total Pool</p>
-            <p className="text-lg font-bold">{Number(totalPool) / 100000000} APT</p>
+            <p className="text-lg font-bold">{Number(totalPool) / 100000000} MOVE</p>
           </div>
           {isFinished && winner && (
             <div className="flex items-center gap-2">

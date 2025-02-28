@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Account } from '../account';
 import { Button } from '../ui/button';
+import { WalletSelector } from "@/components/WalletSelector";
 
 export default function Header() {
   return (
@@ -20,8 +21,8 @@ export default function Header() {
             <Button className=" bg-amber-400 w-30 ml-7 h-8 font-semibold">My Bet</Button>
           </Link>
         </div>
-        <div className="flex items-center gap-2">
-          <Account />
+        <div className="flex items-center gap-4">
+          <WalletSelector />
         </div>
       </nav>
     </div>
