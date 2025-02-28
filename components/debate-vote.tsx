@@ -32,6 +32,7 @@ interface Debate {
   ai_b_pool: number;
   winner: number;
   is_finished: boolean;
+  contractId: number;
 }
 
 const client = new AptosClient(
@@ -55,7 +56,11 @@ export const DebateVote = ({ id }: GameDetailProps) => {
   useEffect(() => {
     const fetchDebate = async () => {
       try {
-        console.log('Fetching debate with ID:', id);
+        console.log('🌟 Calling contract with:', {
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
+          arguments: [id],
+          contractAddress: CONTRACT_ADDRESS
+        });
 
         const response = await client.view({
           function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
@@ -63,66 +68,55 @@ export const DebateVote = ({ id }: GameDetailProps) => {
           arguments: [id]
         });
 
-        console.log('Raw response:', response);
+        console.log('📥 Contract Response:', response);
 
         if (!response || !response[0]) {
           console.error('Invalid response format:', response);
           return;
         }
 
-        try {
-          const debateData = response[0] as any;
-          console.log('Debate data:', debateData);
+        const debateData = response[0] as any;
+        console.log('Debate data:', debateData);
 
-          // 데이터 구조 검증
-          if (
-            !debateData.id ||
-            !debateData.name ||
-            !debateData.topic ||
-            !debateData.ai_a ||
-            !debateData.ai_b
-          ) {
-            console.error(
-              'Missing required fields in debate data:',
-              debateData
-            );
-            return;
-          }
-
-          const debate: Debate = {
-            id: Number(debateData.id),
-            name: debateData.name,
-            topic: debateData.topic,
-            creator: debateData.creator,
-            ai_a: {
-              name: debateData.ai_a.name,
-              character: debateData.ai_a.character,
-              address: debateData.ai_a.address
-            },
-            ai_b: {
-              name: debateData.ai_b.name,
-              character: debateData.ai_b.character,
-              address: debateData.ai_b.address
-            },
-            total_pool: Number(debateData.total_pool),
-            ai_a_pool: Number(debateData.ai_a_pool),
-            ai_b_pool: Number(debateData.ai_b_pool),
-            winner: Number(debateData.winner),
-            is_finished: debateData.is_finished
-          };
-
-          console.log('Transformed debate:', debate);
-          setDebate(debate);
-        } catch (parseError) {
-          console.error('Error parsing debate data:', parseError);
-          console.error('Raw debate data:', response[0]);
+        // 데이터 구조 검증
+        if (
+          !debateData.id ||
+          !debateData.name ||
+          !debateData.topic ||
+          !debateData.ai_a ||
+          !debateData.ai_b
+        ) {
+          console.error('Missing required fields in debate data:', debateData);
+          return;
         }
+
+        const debate: Debate = {
+          id: Number(id),
+          contractId: Number(debateData.id),
+          name: debateData.name,
+          topic: debateData.topic,
+          creator: debateData.creator,
+          ai_a: {
+            name: debateData.ai_a.name,
+            character: debateData.ai_a.character,
+            address: debateData.ai_a.address
+          },
+          ai_b: {
+            name: debateData.ai_b.name,
+            character: debateData.ai_b.character,
+            address: debateData.ai_b.address
+          },
+          total_pool: Number(debateData.total_pool),
+          ai_a_pool: Number(debateData.ai_a_pool),
+          ai_b_pool: Number(debateData.ai_b_pool),
+          winner: Number(debateData.winner),
+          is_finished: debateData.is_finished
+        };
+
+        console.log('Transformed debate:', debate);
+        setDebate(debate);
       } catch (error) {
-        console.error('Error fetching debate:', error);
-        if (error instanceof Error) {
-          console.error('Error message:', error.message);
-          console.error('Error stack:', error.stack);
-        }
+        console.error('❌ Contract call failed:', error);
       }
     };
 
@@ -147,22 +141,29 @@ export const DebateVote = ({ id }: GameDetailProps) => {
       }
 
       const amountInOcta = (parseFloat(amount) * 100000000).toString();
-      console.log('Amount in Octa:', amountInOcta);
+
+      console.log('🎲 Preparing bet transaction:', {
+        function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
+        arguments: [id, amountInOcta, choice.toString()],
+        amount,
+        amountInOcta,
+        choice
+      });
 
       const transaction = {
         payload: {
           type: 'entry_function_payload',
           function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
           type_arguments: [],
-          arguments: [debate.id.toString(), amountInOcta, choice.toString()]
+          arguments: [id, amountInOcta, choice.toString()]
         }
       };
 
       const response = await window.aptos.signAndSubmitTransaction(transaction);
-      console.log('Transaction Response:', response);
+      console.log('✅ Transaction successful:', response);
       toast({ title: 'Bet placed successfully' });
     } catch (error) {
-      console.error('Error details:', error);
+      console.error('❌ Transaction failed:', error);
       toast({ variant: 'destructive', title: 'Failed to place bet' });
     }
   };
