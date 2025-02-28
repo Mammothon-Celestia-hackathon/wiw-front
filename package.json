@@ -95,7 +95,9 @@
     "uuid": "^9.0.1",
     "xlsx": "^0.18.5",
     "zod": "^3.22.4",
-    "zustand": "^4.4.6"
+    "zustand": "^4.4.6",
+    "aptos": "^1.21.0",
+    "@wallet-standard/core": "^1.0.3"
   },
   "devDependencies": {
     "@aptos-labs/ts-sdk": "^1.35.0",

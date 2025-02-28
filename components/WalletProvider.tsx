@@ -6,12 +6,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAutoConnect } from "@/components/AutoConnectProvider";
 import { Network } from "@aptos-labs/ts-sdk";
 import { OKXWallet } from "@okwallet/aptos-wallet-adapter";
+import { PetraWallet } from "petra-plugin-wallet-adapter";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
   const { autoConnect } = useAutoConnect();
   const { toast } = useToast();
 
-  const wallets = [new OKXWallet()];
+  const wallets = [new OKXWallet(), new PetraWallet()];
 
   return (
     <AptosWalletAdapterProvider
