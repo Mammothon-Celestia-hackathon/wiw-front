@@ -37,7 +37,7 @@ export default function Chat() {
     if (agents) {
       const timeoutId = setTimeout(() => {
         sendMessage({
-          text: 'blackrock dumped bitcoin about $441M. it will be affect to market. so, will be price go down?',
+          text: 'blackrock dumped bitcoin about $441M. so, will be price go down?',
           agentId: agents.B.id,
           selectedFile: null
         });
