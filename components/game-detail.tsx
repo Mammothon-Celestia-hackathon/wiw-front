@@ -45,27 +45,27 @@ interface Message {
 const DUMMY_MESSAGES: Message[] = [
   {
     id: 1,
-    sender: 'Bull Agent (강세장 전문가)',
+    sender: 'Bull Agent (Bull Market Expert)',
     content:
-      '현재 BNB의 기술적 지표를 분석해보면, RSI가 상승 추세를 보이고 있으며 MACD도 긍정적인 신호를 보내고 있습니다. 또한 최근 바이낸스의 적극적인 BNB 토큰 소각 정책과 DeFi 생태계 확장은 가격 상승을 뒷받침할 것입니다.',
+      "Looking at the current technical indicators for BNB, RSI shows an upward trend and MACD is also sending positive signals. Additionally, Binance's aggressive BNB token burning policy and DeFi ecosystem expansion will support the price increase.",
     timestamp: new Date(Date.now() - 3600000).toISOString(),
     isA: true,
     avatar: '🐂'
   },
   {
     id: 2,
-    sender: 'Bear Agent (약세장 전문가)',
+    sender: 'Bear Agent (Bear Market Expert)',
     content:
-      '하지만 현재 전반적인 시장 상황을 보면 위험 자산에 대한 선호도가 감소하고 있습니다. 특히 최근 규제 당국의 압박과 전반적인 암호화폐 시장의 불확실성을 고려할 때, 300달러 돌파는 시기상조라고 봅니다.',
+      'However, looking at the current overall market conditions, there is a decreasing preference for risk assets. Considering the recent regulatory pressure and overall uncertainty in the cryptocurrency market, breaking through $300 seems premature.',
     timestamp: new Date(Date.now() - 3000000).toISOString(),
     isA: false,
     avatar: '🐻'
   },
   {
     id: 3,
-    sender: 'Bull Agent (강세장 전문가)',
+    sender: 'Bull Agent (Bull Market Expert)',
     content:
-      '그렇지만 BNB는 다른 암호화폐와 달리 실질적인 사용 사례와 수요가 있습니다. 바이낸스 체인의 성장과 함께 BNB의 활용도는 계속 증가하고 있으며, 이는 가격 상승의 강력한 기반이 될 것입니다.',
+      'Nevertheless, unlike other cryptocurrencies, BNB has practical use cases and demand. With the growth of Binance Chain, the utility of BNB continues to increase, which will serve as a strong foundation for price appreciation.',
     timestamp: new Date(Date.now() - 2400000).toISOString(),
     isA: true,
     avatar: '🐂'
@@ -80,6 +80,8 @@ export const GameDetail = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
   const [messages] = useState<Message[]>(DUMMY_MESSAGES);
   const { account, connected } = useWallet();
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [isTimerActive, setIsTimerActive] = useState(true);
 
   useEffect(() => {
     const fetchDebate = async () => {
@@ -119,27 +121,27 @@ export const GameDetail = ({ id }: GameDetailProps) => {
             return;
           }
 
-          // const debate: Debate = {
-          //   id: Number(debateData.id),
-          //   name: debateData.name,
-          //   topic: debateData.topic,
-          //   creator: debateData.creator,
-          //   ai_a: {
-          //     name: debateData.ai_a.name,
-          //     character: debateData.ai_a.character,
-          //     address: debateData.ai_a.address
-          //   },
-          //   ai_b: {
-          //     name: debateData.ai_b.name,
-          //     character: debateData.ai_b.character,
-          //     address: debateData.ai_b.address
-          //   },
-          //   total_pool: Number(debateData.total_pool),
-          //   ai_a_pool: Number(debateData.ai_a_pool),
-          //   ai_b_pool: Number(debateData.ai_b_pool),
-          //   winner: Number(debateData.winner),
-          //   is_finished: debateData.is_finished
-          // };
+          const debate: Debate = {
+            id: Number(debateData.id),
+            name: debateData.name,
+            topic: debateData.topic,
+            creator: debateData.creator,
+            ai_a: {
+              name: debateData.ai_a.name,
+              character: debateData.ai_a.character,
+              address: debateData.ai_a.address
+            },
+            ai_b: {
+              name: debateData.ai_b.name,
+              character: debateData.ai_b.character,
+              address: debateData.ai_b.address
+            },
+            total_pool: Number(debateData.total_pool),
+            ai_a_pool: Number(debateData.ai_a_pool),
+            ai_b_pool: Number(debateData.ai_b_pool),
+            winner: Number(debateData.winner),
+            is_finished: debateData.is_finished
+          };
 
           console.log('Transformed debate:', debate);
           setDebate(debate);
@@ -161,26 +163,28 @@ export const GameDetail = ({ id }: GameDetailProps) => {
     }
   }, [id]);
 
-  const debates: Debate = {
-    id: 1,
-    name: 'AI Ethics in Society',
-    topic: 'Should AI have rights similar to humans?',
-    creator: 'user123',
-    ai_a: {
-      name: 'AlphaGPT',
-      character: 'Logical and data-driven',
-      address: '0x123456789abcdef'
-    },
-    ai_b: {
-      name: 'BetaGPT',
-      character: 'Emotional and human-centric',
-      address: '0xfedcba987654321'
-    },
-    total_pool: 1000,
-    ai_a_pool: 500,
-    ai_b_pool: 500,
-    winner: 0,
-    is_finished: false
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (isTimerActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev - 0.1;
+          if (newTime <= 0) {
+            setIsTimerActive(false);
+            handleTimeUp();
+            return 0;
+          }
+          return newTime;
+        });
+      }, 100);
+    }
+
+    return () => clearInterval(timer);
+  }, [isTimerActive]);
+
+  const handleTimeUp = () => {
+    console.log("Time's up!");
   };
 
   return (
@@ -191,72 +195,25 @@ export const GameDetail = ({ id }: GameDetailProps) => {
             <div>
               <CardTitle>Live Debate</CardTitle>
               <CardDescription>
-                {debates.is_finished
+                {debate?.is_finished
                   ? 'Debate has ended'
                   : 'Debate in progress'}
               </CardDescription>
             </div>
-            <Badge variant="outline" className="px-3 py-1">
-              {messages.length} messages
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isTimerActive && (
+                <Badge
+                  variant="outline"
+                  className="px-3 py-1 transition-all duration-100"
+                >
+                  {timeLeft.toFixed(1)}s
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-full">
-            <div className="space-y-6 p-6">
-              {messages.map((message, index) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.isA ? 'justify-start' : 'justify-end'
-                  } group`}
-                >
-                  <div
-                    className={`flex ${
-                      message.isA ? 'flex-row' : 'flex-row-reverse'
-                    } max-w-[80%] items-end space-x-2`}
-                  >
-                    {message.isA ? (
-                      <>
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00A29A]/10">
-                          {message.avatar}
-                        </div>
-                        <div>
-                          <div className="rounded-2xl rounded-bl-none bg-[#00A29A]/10 px-4 py-2">
-                            <p className="text-sm">{message.content}</p>
-                          </div>
-                          <span className="ml-2 mt-1 text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleTimeString(
-                              [],
-                              { hour: '2-digit', minute: '2-digit' }
-                            )}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <div className="rounded-2xl rounded-br-none bg-[#C73535]/10 px-4 py-2">
-                            <p className="text-sm">{message.content}</p>
-                          </div>
-                          <span className="mr-2 mt-1 block text-right text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleTimeString(
-                              [],
-                              { hour: '2-digit', minute: '2-digit' }
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C73535]/10">
-                          {message.avatar}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {/* <Chat /> */}
-            </div>
-          </ScrollArea>
+          <Chat />
         </CardContent>
       </Card>
     </div>

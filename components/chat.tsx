@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ROUTES } from '@/api/routes';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { ScrollArea } from './ui/scroll-area';
 
 export default function Chat() {
   const [agents, setAgents] = useState<Agents | null>(null);
@@ -16,6 +17,9 @@ export default function Chat() {
     setSelectedFile
   });
   const [isDebating, setIsDebating] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(13);
+  const [isTimerActive, setIsTimerActive] = useState(true);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -29,6 +33,26 @@ export default function Chat() {
       relayMessage(lastMessage);
     }
   }, [messages, isPending]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (isTimerActive && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev - 0.1;
+          if (newTime <= 0) {
+            setIsTimerActive(false);
+            handleTimeUp();
+            return 0;
+          }
+          return newTime;
+        });
+      }, 100);
+    }
+
+    return () => clearInterval(timer);
+  }, [isTimerActive]);
 
   const handleDebate = (lastMessage: TextResponse) => {
     if (!lastMessage) return;
@@ -63,7 +87,6 @@ export default function Chat() {
           ]
         : undefined
     };
-    //setMessages((prev) => [...prev, userMessage]);
 
     sendMessage({
       text: input,
@@ -101,51 +124,87 @@ export default function Chat() {
   const getAgents = async () => {
     const res = await fetch(ROUTES.getAgents());
     const data = await res.json();
-    return data;
+    return { A: data.agents[0], B: data.agents[1] };
+  };
+
+  const handleTimeUp = () => {
+    if (!agents) return;
+
+    sendMessage({
+      text: 'Will Bitcoin break through $100,000 within Q1 2025?',
+      agentId: agents.A.id,
+      selectedFile: null
+    });
   };
 
   return (
-    <div className="flex h-screen max-h-screen w-full flex-col">
+    <div className="flex h-auto min-h-[500px] w-full flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="mx-auto max-w-3xl space-y-4">
-          {messages.length > 0 ? (
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex text-left ${
-                  message.user === 'Eliza' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <pre className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-muted px-4 py-2">
-                  {message.user === 'Eliza' ? 'bull' : 'bear'}
-                  {message.text}
-                </pre>
+        <ScrollArea className="h-auto">
+          <div className="space-y-6 p-6">
+            {messages.length > 0 ? (
+              messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${
+                    message.user === 'Eliza' ? 'justify-end' : 'justify-start'
+                  } group`}
+                >
+                  <div
+                    className={`flex ${
+                      message.user === 'Eliza' ? 'flex-row' : 'flex-row-reverse'
+                    } max-w-[80%] items-end space-x-2`}
+                  >
+                    {message.user === 'Eliza' ? (
+                      <>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00A29A]/10">
+                          {message.user === 'Eliza' ? '🐂' : '🐻'}
+                        </div>
+                        <div>
+                          <div className="rounded-2xl rounded-bl-none bg-[#00A29A]/10 px-4 py-2">
+                            <p className="text-sm">{message.text}</p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="rounded-2xl rounded-br-none bg-[#C73535]/10 px-4 py-2">
+                            <p className="text-sm">{message.text}</p>
+                          </div>
+                        </div>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C73535]/10">
+                          {message.user === 'Eliza' ? '🐂' : '🐻'}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground">
+                No messages yet.
               </div>
-            ))
-          ) : (
-            <div className="text-center text-muted-foreground">
-              No messages yet. Start a conversation!
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="border-t bg-background p-4">
+            <div className="mx-auto max-w-3xl">
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1"
+                  disabled={isPending}
+                />
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? '...' : 'Send'}
+                </Button>
+              </form>
             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      <div className="border-t bg-background p-4">
-        <div className="mx-auto max-w-3xl">
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1"
-              disabled={isPending}
-            />
-            <Button type="submit" disabled={isPending}>
-              {isPending ? '...' : 'Send'}
-            </Button>
-          </form>
-        </div>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

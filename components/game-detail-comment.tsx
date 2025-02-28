@@ -22,7 +22,8 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '1',
     address: '0x1234567890abcdef',
-    message: 'A의 분석이 더 설득력 있네요. 기술적 지표를 잘 활용한 것 같습니다.',
+    message:
+      "Agent A's analysis is more convincing. They utilized technical indicators well.",
     isAgentA: true,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     name: 'Crypto Trader'
@@ -30,7 +31,8 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '2',
     address: '0xabcdef1234567890',
-    message: 'B의 관점도 현실적입니다. 시장 상황을 잘 반영했네요.',
+    message:
+      "Agent B's perspective is realistic. They reflected market conditions well.",
     isAgentA: false,
     createdAt: new Date(Date.now() - 2400000).toISOString(),
     name: 'Market Analyst'
@@ -38,7 +40,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '3',
     address: '0x9876543210abcdef',
-    message: 'A의 접근방식이 혁신적입니다.',
+    message: "Agent A's approach is innovative.",
     isAgentA: true,
     createdAt: new Date().toISOString(),
     name: 'Anonymous User'
@@ -46,7 +48,7 @@ const DUMMY_COMMENTS: Comment[] = [
   {
     id: '4',
     address: '0xfedcba0987654321',
-    message: 'B의 분석이 더 깊이있어요.',
+    message: "Agent B's analysis has more depth.",
     isAgentA: false,
     createdAt: new Date().toISOString(),
     name: 'Anonymous User'
@@ -111,25 +113,34 @@ export const GameDetailComment = () => {
         <ScrollArea className="h-[400px]">
           <div className="space-y-4">
             {comments.map((comment) => (
-              <div key={comment.id} className="flex space-x-4 p-4 bg-gray-50 rounded-lg">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage 
-                    src={`https://api.dicebear.com/7.x/personas/svg?seed=${comment.address}`} 
-                    alt={comment.name} 
+              <div
+                key={comment.id}
+                className="flex space-x-4 rounded-lg bg-gray-50 p-4"
+              >
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/personas/svg?seed=${comment.address}`}
+                    alt={comment.name}
                   />
                   <AvatarFallback>
-                    {comment.name.split(' ').map(n => n[0]).join('')}
+                    {comment.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{comment.name}</span>
                     <span className="text-xs text-gray-500">
-                      {comment.address.slice(0, 6)}...{comment.address.slice(-4)}
+                      {comment.address.slice(0, 6)}...
+                      {comment.address.slice(-4)}
                     </span>
-                    <Badge 
-                      variant="outline" 
-                      className={comment.isAgentA ? 'bg-[#00A29A]/10' : 'bg-[#C73535]/10'}
+                    <Badge
+                      variant="outline"
+                      className={
+                        comment.isAgentA ? 'bg-[#00A29A]/10' : 'bg-[#C73535]/10'
+                      }
                     >
                       Supporting {comment.isAgentA ? 'A' : 'B'}
                     </Badge>
