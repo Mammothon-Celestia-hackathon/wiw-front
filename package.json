@@ -12,7 +12,7 @@
   "dependencies": {
     "@apollo/client": "^3.13.1",
     "@apollo/experimental-nextjs-app-support": "^0.11.9",
-    "@aptos-labs/wallet-adapter-core": "^4.25.0",
+    "@aptos-labs/wallet-adapter-core": "3.5.0",
     "@aptos-labs/wallet-adapter-react": "^3.8.0",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/modifiers": "^7.0.0",
@@ -97,7 +97,9 @@
     "zod": "^3.22.4",
     "zustand": "^4.4.6",
     "aptos": "^1.21.0",
-    "@wallet-standard/core": "^1.0.3"
+    "@wallet-standard/core": "^1.0.3",
+    "@mizuwallet-sdk/core": "^1.4.0",
+    "@mizuwallet-sdk/protocol": "0.0.6"
   },
   "devDependencies": {
     "@aptos-labs/ts-sdk": "^1.35.0",
