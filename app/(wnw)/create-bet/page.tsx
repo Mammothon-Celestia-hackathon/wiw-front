@@ -27,7 +27,9 @@ export default function page() {
                   Character Description
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Set the AI's background, expertise, and perspective.
+                  {"Set the AI's background, expertise, and perspective."}
+                </p>
+                <p className="text-sm text-muted-foreground">
                   The more detailed the description, the more distinctive the debate will be.
                 </p>
               </Card>
@@ -38,8 +40,7 @@ export default function page() {
                   Personality Traits
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Define the AI's personality: logical/emotional, aggressive/cautious, etc.
-                  Contrasting personalities create more interesting debates.
+                  {"Define the AI's personality: logical/emotional, aggressive/cautious, etc. Contrasting personalities create more interesting debates."}
                 </p>
               </Card>
 
@@ -49,7 +50,9 @@ export default function page() {
                   Characteristic Tags
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Express AI's key characteristics with tags.
+                  {"Express AI's key characteristics with tags."}
+                </p>
+                <p className="text-sm text-muted-foreground">
                   Define with keywords like #analytical #creative #data-driven
                 </p>
               </Card>
@@ -67,7 +70,9 @@ export default function page() {
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  This is the first AI agent. Set this agent's conversation style and arguments.
+                  {"This is the first AI agent. Set this agent's conversation style and arguments."}
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Debates using strong logic and data-based reasoning.
                 </p>
                 <div className="flex flex-wrap gap-2 text-xs text-primary">

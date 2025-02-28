@@ -1,10 +1,50 @@
+"use client";
+
 import Link from 'next/link';
-import Image from 'next/image';
-import { Account } from '../account';
 import { Button } from '../ui/button';
-import { WalletSelector } from "@/components/WalletSelector";
+import { WalletSelector } from '@/components/WalletSelector';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useEffect } from 'react';
+import { ApolloError, useMutation as useApolloMutation } from '@apollo/client';
+import { CreateUserDocument, JoinGameDocument } from '@/src/__generated__/graphql';
 
 export default function Header() {
+  const { account, connected, network, wallet, changeNetwork } = useWallet();
+
+  const [joinGame, { loading: joinGameLoading }] = useApolloMutation(
+    JoinGameDocument,
+    {
+      onError: (error) => {
+        console.log(error);
+        // alert(error);
+      },
+    },
+  );
+
+  const [createUser] = useApolloMutation(CreateUserDocument, {
+    onError: (error: ApolloError) => console.log(error),
+  });
+
+  useEffect(() => {
+    const gameId = "67bd22a706937ce8a18d4cea";
+    if (account?.address) {
+      createUser({
+        variables: {
+          address: account?.address,
+        },
+      }).then(resOfCreateUser=> {
+        console.log(resOfCreateUser);
+      }).finally(() => {
+        joinGame({
+          variables: {
+            gameId: gameId,
+            userAddress: account?.address,
+          },
+        }).then(resOfJoinGame => {});
+      });
+    }
+  }, [connected, account?.address]);
+
   return (
     <div className="supports-backdrop-blur:bg-background/60 fixed left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
       <nav className="ml-20 mr-20 flex h-20 items-center justify-between px-4">

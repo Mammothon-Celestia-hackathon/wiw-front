@@ -1,94 +1,156 @@
-import { gql } from '@apollo/client';
+import { gql } from "@/src/__generated__/gql";
 
-export const GET_GAMES_BY_OWNER = gql`
-  query GetGamesByOwnerAddress($ownerAddress: String!) {
-    getGamesByOwnerAddress(ownerAddress: $ownerAddress) {
-      id
-      name
-      topic
-      bettingTokenDenom
-      defaultBettingAmount
-      limit
-      createdAt
-      ownerAddress
-      userAddresses
+gql(/* GraphQL */ `
+    query getGamesByOwnerAddress($address: String!) {
+        getGamesByOwnerAddress(ownerAddress: $address) {
+            id
+            name
+            limit
+            defaultBettingAmount
+            bettingTokenDenom
+            owner {
+                id
+                address
+                avatar
+            }
+            users {
+                id
+                address
+                avatar
+            }
+            bettings {
+                bettingAmount
+                bettingTokenDenom
+                ownerAddress
+                result
+                predictionWinnerAiAgentId
+                createdAt
+                updatedAt
+            }
+            aiAgents {
+                id
+                name
+                address
+                context
+                createdAt
+                updatedAt
+            }
+            winnerAiAgentId
+            topic
+            createdAt
+            updatedAt
+        }
     }
-  }
-`;
 
-export const GET_JOINED_GAMES = gql`
-  query GetJoinedGames($userAddress: String!) {
-    getJoinedGames(userAddress: $userAddress) {
-      id
-      name
-      topic
-      bettingTokenDenom
-      defaultBettingAmount
-      limit
-      createdAt
-      ownerAddress
-      userAddresses
+    query getMessagesByGame($gameId: String!, $userAddress: String!) {
+        getMessagesByGame(gameId: $gameId, userAddress: $userAddress) {
+            id
+            sender {
+                id
+                address
+                avatar
+            }
+            senderAddress
+            content
+            messageType
+            createdAt
+            updatedAt
+            gameId
+        }
     }
-  }
-`;
 
-export const GET_GAME_DETAIL = gql`
-  query GetGameDetail($id: ID!, $userAddress: String!) {
-    getGameDetail(id: $id) {
-      id
-      name
-      topic
-      ownerAddress
-      bettingTokenDenom
-      defaultBettingAmount
-      limit
-      createdAt
-      updatedAt
-      userAddresses
-      owner {
-        id
-        address
-        name
-        avatar
-      }
+    query getJoinedGames($userAddress: String!) {
+        getJoinedGames(userAddress: $userAddress) {
+            id
+            name
+            limit
+            defaultBettingAmount
+            bettingTokenDenom
+            owner {
+                id
+                address
+                avatar
+            }
+            users {
+                id
+                address
+                avatar
+            }
+            bettings {
+                bettingAmount
+                bettingTokenDenom
+                ownerAddress
+                result
+                predictionWinnerAiAgentId
+                createdAt
+                updatedAt
+            }
+            aiAgents {
+                id
+                name
+                address
+                context
+                createdAt
+                updatedAt
+            }
+            winnerAiAgentId
+            topic
+            createdAt
+            updatedAt
+        }
     }
-    getMessagesByGame(gameId: $id, userAddress: $userAddress) {
-      id
-      content
-      messageType
-      senderAddress
-      createdAt
-    }
-    isJoinedGame(gameId: $id, userAddress: $userAddress)
-  }
-`;
 
-export const SEND_MESSAGE = gql`
-  mutation SendMessage($content: String!, $gameId: String!, $messageType: String!, $senderAddress: String!) {
-    sendMessage(
-      content: $content
-      gameId: $gameId
-      messageType: $messageType
-      senderAddress: $senderAddress
-    ) {
-      id
-      content
-      messageType
-      senderAddress
-      createdAt
+    query isJoinedGame($gameId: String!, $userAddress: String!) {
+        isJoinedGame(gameId: $gameId, userAddress: $userAddress)
     }
-  }
-`;
 
-export const GET_MESSAGES_BY_GAME = gql`
-  query GetMessagesByGame($gameId: String!, $userAddress: String!) {
-    getMessagesByGame(gameId: $gameId, userAddress: $userAddress) {
-      id
-      content
-      messageType
-      senderAddress
-      createdAt
+    query getAllAiAgent {
+        getAllAiAgent {
+            id
+            name
+            context
+            address
+        }
     }
-    isJoinedGame(gameId: $gameId, userAddress: $userAddress)
-  }
-`;
+
+    query getGameById($id: String!) {
+        getGameById(id: $id) {
+            id
+            name
+            limit
+            defaultBettingAmount
+            bettingTokenDenom
+            owner {
+                id
+                address
+                avatar
+            }
+            users {
+                id
+                address
+                avatar
+            }
+            bettings {
+                bettingAmount
+                bettingTokenDenom
+                ownerAddress
+                result
+                predictionWinnerAiAgentId
+                createdAt
+                updatedAt
+            }
+            aiAgents {
+                id
+                name
+                address
+                context
+                createdAt
+                updatedAt
+            }
+            winnerAiAgentId
+            topic
+            createdAt
+            updatedAt
+        }
+    }
+`);

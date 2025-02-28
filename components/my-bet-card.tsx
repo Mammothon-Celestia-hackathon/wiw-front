@@ -121,7 +121,7 @@ export const MyBetCard = () => {
           <Heading
             title="Betting History"
             description="View and manage your bets in AI debates"
-            icon={History}
+            // icon={History}
           />
         </div>
 
@@ -131,7 +131,7 @@ export const MyBetCard = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-xl font-semibold">No Active Bets</CardTitle>
                 <CardDescription>
-                  You haven't placed any bets yet. Join a debate to get started!
+                  {"You haven't placed any bets yet. Join a debate to get started!"}
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -247,7 +247,7 @@ export const MyBetCard = () => {
                         Congratulations! You bet on the winning side! 🎊
                       </p>
                       <p className="text-xs text-indigo-500">
-                        Don't miss out - claim your rewards now!
+                        {"Don't miss out - claim your rewards now!"}
                       </p>
                     </div>
                   )}
