@@ -18,21 +18,19 @@ import * as z from 'zod';
 import { useToast } from './ui/use-toast';
 import React from 'react';
 import { AgentFormFields } from './agent-form-fields';
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-core";
 
 const formSchema = z.object({
-  name: z.string().min(3, "게임 이름은 최소 3자 이상이어야 합니다"),
-  topic: z.string().min(5, "토론 주제는 최소 5자 이상이어야 합니다"),
+  name: z.string().min(1, "Please enter a game name"),
+  topic: z.string().min(1, "Please enter a debate topic"),
   agentA: z.object({
-    name: z.string().min(2, "AI 이름은 최소 2자 이상이어야 합니다"),
-    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
-    address: z.string().min(1, "주소를 입력해주세요")
+    name: z.string().min(1, "Please enter AI name"),
+    character: z.string().min(1, "Please enter character description"),
+    address: z.string().min(1, "Please enter address")
   }),
   agentB: z.object({
-    name: z.string().min(2, "AI 이름은 최소 2자 이상이어야 합니다"),
-    character: z.string().min(10, "캐릭터 설명은 최소 10자 이상이어야 합니다"),
-    address: z.string().min(1, "주소를 입력해주세요")
+    name: z.string().min(1, "Please enter AI name"),
+    character: z.string().min(1, "Please enter character description"),
+    address: z.string().min(1, "Please enter address")
   }),
 });
 
@@ -45,7 +43,6 @@ export const CreateForm = () => {
   const [agentBTags, setAgentBTags] = useState<string[]>([]);
   const [agentACharacter, setAgentACharacter] = useState('');
   const [agentBCharacter, setAgentBCharacter] = useState('');
-  const { account, connected, signAndSubmitTransaction } = useWallet();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,16 +58,19 @@ export const CreateForm = () => {
     try {
       setLoading(true);
       
-      if (!account || !connected) {
-        toast({ variant: 'destructive', title: "지갑을 연결해주세요" });
+      if (!window.aptos) {
+        toast({ variant: 'destructive', title: "Please install Aptos Wallet" });
         return;
       }
 
-      const transaction: InputTransactionData = {
-        data: {
+      const { address } = await window.aptos.connect();
+      
+      const transaction = {
+        payload: {
+          type: "entry_function_payload",
           function: `${CONTRACT_ADDRESS}::ai_debate_v4::create_debate`,
-          typeArguments: [],
-          functionArguments: [
+          type_arguments: [],
+          arguments: [
             values.name,
             values.topic,
             values.agentA.name,
@@ -83,12 +83,12 @@ export const CreateForm = () => {
         }
       };
 
-      const response = await signAndSubmitTransaction(transaction);
+      const response = await window.aptos.signAndSubmitTransaction(transaction);
       console.log('Transaction Response:', response);
-      toast({ title: "디베이트 생성 성공" });
+      toast({ title: "Debate created successfully" });
     } catch (error) {
       console.error('Error details:', error);
-      toast({ variant: 'destructive', title: "디베이트 생성 실패" });
+      toast({ variant: 'destructive', title: "Failed to create debate" });
     } finally {
       setLoading(false);
     }
@@ -107,9 +107,9 @@ export const CreateForm = () => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>게임 이름</FormLabel>
+                <FormLabel>Game Name</FormLabel>
                 <FormControl>
-                  <Input disabled={loading} placeholder="게임 이름을 입력하세요" {...field} />
+                  <Input disabled={loading} placeholder="Enter game name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,9 +121,9 @@ export const CreateForm = () => {
             name="topic"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>토론 주제</FormLabel>
+                <FormLabel>Debate Topic</FormLabel>
                 <FormControl>
-                  <Input disabled={loading} placeholder="토론할 주제를 입력하세요" {...field} />
+                  <Input disabled={loading} placeholder="Enter debate topic" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -167,7 +167,7 @@ export const CreateForm = () => {
           </div>
 
           <Button disabled={loading} className="w-full" type="submit">
-            디베이트 생성하기
+            Create Debate
           </Button>
         </form>
       </Form>

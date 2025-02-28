@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import { useState } from 'react';
+import { Users } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 export interface AgentFormFieldsProps {
   form: UseFormReturn<any>;
@@ -18,31 +21,32 @@ export interface AgentFormFieldsProps {
   requireAddress?: boolean;
 }
 
-export function AgentFormFields({
+export const AgentFormFields = ({
   form,
   type,
   tags,
   onAddTag,
   onRemoveTag,
   onCharacterChange,
-  requireAddress
-}: AgentFormFieldsProps) {
-  const colorClass = type === 'A' ? 'text-primary' : 'text-destructive';
+  requireAddress = false
+}: AgentFormFieldsProps) => {
+  const [tagInput, setTagInput] = useState('');
 
   return (
     <div className="space-y-4">
-      <h3 className={`text-lg font-semibold ${colorClass}`}>
-        Agent {type} 설정
-      </h3>
+      <div className="flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        <h3 className="font-semibold">AI Agent {type}</h3>
+      </div>
 
       <FormField
         control={form.control}
         name={`agent${type}.name`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>AI {type} 이름</FormLabel>
+            <FormLabel>Agent Name</FormLabel>
             <FormControl>
-              <Input placeholder={`AI ${type}의 이름을 입력하세요`} {...field} />
+              <Input placeholder="Enter agent name" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -54,10 +58,11 @@ export function AgentFormFields({
         name={`agent${type}.character`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>AI {type} 캐릭터 설정</FormLabel>
+            <FormLabel>Character Description</FormLabel>
             <FormControl>
-              <Input 
-                placeholder={`AI ${type}의 캐릭터를 설정하세요`} 
+              <Textarea 
+                placeholder="Describe the agent's character and role"
+                className="resize-none"
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);
@@ -76,9 +81,9 @@ export function AgentFormFields({
           name={`agent${type}.address`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>AI {type} 주소</FormLabel>
+              <FormLabel>Wallet Address</FormLabel>
               <FormControl>
-                <Input placeholder={`AI ${type}의 주소를 입력하세요`} {...field} />
+                <Input placeholder="Enter wallet address" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,40 +91,36 @@ export function AgentFormFields({
         />
       )}
 
-      <FormField
-        control={form.control}
-        name={`agent${type}.tag`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>특성 태그</FormLabel>
-            <div className="flex gap-2">
-              <FormControl>
-                <Input {...field} placeholder="태그 입력" className="flex-1" />
-              </FormControl>
-              <Button
-                type="button"
-                onClick={() => onAddTag(type, field.value)}
-                size="sm"
-                className="shrink-0 px-8"
-              >
-                추가
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {tags.map((tag, index) => (
-                <Badge key={index} variant="outline" className={colorClass}>
-                  {tag}
-                  <X
-                    className="w-3 h-3 ml-1 cursor-pointer"
-                    onClick={() => onRemoveTag(type, index)}
-                  />
-                </Badge>
-              ))}
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="space-y-2">
+        <Label>Tags</Label>
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <Badge 
+              key={index} 
+              variant="secondary"
+              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => onRemoveTag(type, index)}
+            >
+              {tag}
+              <X className="w-3 h-3 ml-1" />
+            </Badge>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Add tag (press Enter)"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                onAddTag(type, tagInput);
+                setTagInput('');
+              }
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
-} 
+}; 
