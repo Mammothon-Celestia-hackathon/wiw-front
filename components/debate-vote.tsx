@@ -43,7 +43,8 @@ interface GameDetailProps {
 
 export const DebateVote = ({ id }: GameDetailProps) => {
   const [debate, setDebate] = useState<Debate | null>(null);
-  const [betAmount, setBetAmount] = useState<string>("");
+  const [betAmountA, setBetAmountA] = useState('');  // AI A의 배팅 금액
+  const [betAmountB, setBetAmountB] = useState('');  // AI B의 배팅 금액
   const { account, connected } = useWallet();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -118,53 +119,39 @@ export const DebateVote = ({ id }: GameDetailProps) => {
     }
   }, [id]);
 
-  const handleVote = async (choice: number) => {
-    if (!connected || !account) {
-      toast({
-        variant: "destructive",
-        title: "Connect your wallet",
-      });
-      return;
-    }
-
-    if (!betAmount || isNaN(Number(betAmount)) || Number(betAmount) <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Enter a valid bet amount",
-      });
-      return;
-    }
-
+  const handleBet = async (choice: number, amount: string) => {
     try {
-      setLoading(true);
-      const amount = Number(betAmount) * 100000000; // Convert APT to Octas
-      
-      const payload = {
-        type: "entry_function_payload",
-        function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
-        type_arguments: [],
-        arguments: [debate?.id || 0, amount, choice]
+      if (!window.aptos) {
+        toast({ variant: 'destructive', title: "Please install Aptos wallet" });
+        return;
+      }
+
+      if (!debate) {
+        toast({ variant: 'destructive', title: "Debate information not found" });
+        return;
+      }
+
+      const amountInOcta = (parseFloat(amount) * 100000000).toString();
+
+      const transaction = {
+        payload: {
+          type: "entry_function_payload",
+          function: `${CONTRACT_ADDRESS}::ai_debate_v4::place_bet`,
+          type_arguments: [],
+          arguments: [
+            debate.id.toString(),
+            amountInOcta,
+            choice.toString()
+          ],
+        }
       };
 
-      await window.aptos?.signAndSubmitTransaction(payload);
-      
-      const response = await client.view({
-        function: `${CONTRACT_ADDRESS}::ai_debate_v4::get_debate`,
-        type_arguments: [],
-        arguments: [parseInt(id)]
-      });
-      
-      if (response && response[0]) {
-        setDebate(response[0] as Debate);
-        setBetAmount(""); // 베팅 성공 후 입력값 초기화
-      }
-      
-      toast({ title: "Vote successful" });
+      const response = await window.aptos.signAndSubmitTransaction(transaction);
+      console.log('Transaction Response:', response);
+      toast({ title: "Bet placed successfully" });
     } catch (error) {
-      console.error('Error voting:', error);
-      toast({ variant: 'destructive', title: "Vote failed" });
-    } finally {
-      setLoading(false);
+      console.error('Error details:', error);
+      toast({ variant: 'destructive', title: "Failed to place bet" });
     }
   };
 
@@ -205,13 +192,13 @@ export const DebateVote = ({ id }: GameDetailProps) => {
             <Input
               type="number"
               placeholder="Bet Amount (APT)"
-              value={betAmount}
-              onChange={(e) => setBetAmount(e.target.value)}
+              value={betAmountA}
+              onChange={(e) => setBetAmountA(e.target.value)}
               disabled={debate.is_finished}
             />
             <Button 
               className="w-full bg-[#00A29A] hover:bg-[#00A29A]/90"
-              onClick={() => handleVote(1)}
+              onClick={() => handleBet(1, betAmountA)}
               disabled={debate.is_finished || loading}
             >
               Vote A
@@ -239,13 +226,13 @@ export const DebateVote = ({ id }: GameDetailProps) => {
             <Input
               type="number"
               placeholder="Bet Amount (APT)"
-              value={betAmount}
-              onChange={(e) => setBetAmount(e.target.value)}
+              value={betAmountB}
+              onChange={(e) => setBetAmountB(e.target.value)}
               disabled={debate.is_finished}
             />
             <Button 
               className="w-full bg-[#C73535] hover:bg-[#C73535]/90"
-              onClick={() => handleVote(2)}
+              onClick={() => handleBet(2, betAmountB)}
               disabled={debate.is_finished || loading}
             >
               Vote B
